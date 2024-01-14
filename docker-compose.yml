@@ -6,10 +6,13 @@
       dockerfile: TicketPro/Dockerfile
   pgsql:
     image: postgres:latest
+    container_name: ticketpro_db
     restart: always
     environment:
+      POSTGRES_DB: ticketpro
       POSTGRES_PASSWORD: password
     volumes:
-      - ./pgdata:/var/lib/postgresql/data
+      - ./postgres/data:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - 5432:5432

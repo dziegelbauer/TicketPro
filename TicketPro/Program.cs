@@ -23,10 +23,20 @@ builder.Services.AddAuthentication(options =>
     })
     .AddIdentityCookies();
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ??
-                       throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+string connectionString = string.Empty;
+
+if (builder.Environment.IsDevelopment())
+{
+    connectionString = builder.Configuration.GetConnectionString("DockerDb") ??
+                       throw new InvalidOperationException("Connection string 'DockerDb' not found.");
+}
+else
+{
+    // TODO: implement pulling connection string from SSM Parameter store
+}
+
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlite(connectionString));
+    options.UseNpgsql(connectionString));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
