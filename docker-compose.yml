@@ -1,0 +1,15 @@
+﻿services:
+  ticketpro:
+    image: ticketpro
+    build:
+      context: .
+      dockerfile: TicketPro/Dockerfile
+  pgsql:
+    image: postgres:latest
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: password
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
