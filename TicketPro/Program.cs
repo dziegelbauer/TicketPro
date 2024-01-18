@@ -1,3 +1,7 @@
+using Amazon;
+using Amazon.Runtime;
+using Amazon.SimpleSystemsManagement;
+using Amazon.SimpleSystemsManagement.Model;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -23,7 +27,7 @@ builder.Services.AddAuthentication(options =>
     })
     .AddIdentityCookies();
 
-string connectionString = string.Empty;
+string connectionString;
 
 if (builder.Environment.IsDevelopment())
 {
@@ -32,7 +36,16 @@ if (builder.Environment.IsDevelopment())
 }
 else
 {
-    // TODO: implement pulling connection string from SSM Parameter store
+    var awsCredentials = new AnonymousAWSCredentials();
+    var awsClient = new AmazonSimpleSystemsManagementClient(awsCredentials, RegionEndpoint.USEast1);
+
+    var request = new GetParameterRequest()
+    {
+        Name = "/ticketpro/connectionString",
+        WithDecryption = true
+    };
+    var result = await awsClient.GetParameterAsync(request);
+    connectionString = result.Parameter.Value;
 }
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
