@@ -8,4 +8,5 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     : IdentityDbContext<ApplicationUser>(options)
 {
     public DbSet<Ticket> Tickets => Set<Ticket>();
+    public DbSet<TicketUpdate> TicketUpdates => Set<TicketUpdate>();
 }
