@@ -362,3 +362,39 @@ BEGIN
 END $EF$;
 COMMIT;
 
+START TRANSACTION;
+
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20240120210659_Add_Seed_Customers') THEN
+    INSERT INTO "Customers" ("Id", "City", "Name", "State", "StreetAddress", "Zip")
+    VALUES (1, 'Sheboygan', 'Rogers Steel', 'MI', '123 Wasilla Way', '12345');
+    INSERT INTO "Customers" ("Id", "City", "Name", "State", "StreetAddress", "Zip")
+    VALUES (2, 'Toledo', 'Brown Motors', 'OH', '1042 Grand Avenue', '23456');
+    INSERT INTO "Customers" ("Id", "City", "Name", "State", "StreetAddress", "Zip")
+    VALUES (3, 'Big Spur', 'Appliance Masters', 'IN', '23 Highland Ridge Road', '34567');
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20240120210659_Add_Seed_Customers') THEN
+    PERFORM setval(
+        pg_get_serial_sequence('"Customers"', 'Id'),
+        GREATEST(
+            (SELECT MAX("Id") FROM "Customers") + 1,
+            nextval(pg_get_serial_sequence('"Customers"', 'Id'))),
+        false);
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20240120210659_Add_Seed_Customers') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20240120210659_Add_Seed_Customers', '8.0.1');
+    END IF;
+END $EF$;
+COMMIT;
+

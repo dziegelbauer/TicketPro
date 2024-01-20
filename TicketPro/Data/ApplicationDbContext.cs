@@ -37,5 +37,34 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 Id = "F9D9FA29-3F33-4C3C-9CA2-A51B11581DB7",
                 Name = "Technician"
             });
+
+        builder.Entity<Customer>().HasData(
+            new Customer
+            {
+                Id = 1,
+                Name = "Rogers Steel",
+                StreetAddress = "123 Wasilla Way",
+                City = "Sheboygan",
+                State = "MI",
+                Zip = "12345"
+            },
+            new Customer
+            {
+                Id = 2,
+                Name = "Brown Motors",
+                StreetAddress = "1042 Grand Avenue",
+                City = "Toledo",
+                State = "OH",
+                Zip = "23456"
+            },
+            new Customer
+            {
+                Id = 3,
+                Name = "Appliance Masters",
+                StreetAddress = "23 Highland Ridge Road",
+                City = "Big Spur",
+                State = "IN",
+                Zip = "34567"
+            });
     }
 }
