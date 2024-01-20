@@ -329,3 +329,36 @@ BEGIN
 END $EF$;
 COMMIT;
 
+START TRANSACTION;
+
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20240120201113_Add_ChargeableRate_Field') THEN
+    ALTER TABLE "AspNetUsers" ADD "ChargeableRate" numeric NOT NULL DEFAULT 0.0;
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20240120201113_Add_ChargeableRate_Field') THEN
+    INSERT INTO "AspNetRoles" ("Id", "ConcurrencyStamp", "Name", "NormalizedName")
+    VALUES ('104B3E6E-74E7-4CD5-B3BD-2D5567AE4101', NULL, 'Admin', NULL);
+    INSERT INTO "AspNetRoles" ("Id", "ConcurrencyStamp", "Name", "NormalizedName")
+    VALUES ('3D8EEDC8-9B0C-4921-9681-4A55D35BD5DD', NULL, 'Manager', NULL);
+    INSERT INTO "AspNetRoles" ("Id", "ConcurrencyStamp", "Name", "NormalizedName")
+    VALUES ('A83849D4-4393-4930-9C1A-319AA1572F59', NULL, 'Executive', NULL);
+    INSERT INTO "AspNetRoles" ("Id", "ConcurrencyStamp", "Name", "NormalizedName")
+    VALUES ('F9D9FA29-3F33-4C3C-9CA2-A51B11581DB7', NULL, 'Technician', NULL);
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20240120201113_Add_ChargeableRate_Field') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20240120201113_Add_ChargeableRate_Field', '8.0.1');
+    END IF;
+END $EF$;
+COMMIT;
+
