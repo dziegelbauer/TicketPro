@@ -9,4 +9,5 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 {
     public DbSet<Ticket> Tickets => Set<Ticket>();
     public DbSet<TicketUpdate> TicketUpdates => Set<TicketUpdate>();
+    public DbSet<Customer> Customers => Set<Customer>();
 }
