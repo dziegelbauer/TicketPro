@@ -21,4 +21,5 @@ public class TicketUpdate
     [ForeignKey(nameof(Ticket))]
     public int TicketId { get; set; }
     public Ticket? Ticket { get; set; }
+    public int HoursWorked { get; set; }
 }
