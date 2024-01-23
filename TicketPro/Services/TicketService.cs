@@ -6,22 +6,74 @@ using TicketPro.DTO;
 
 namespace TicketPro.Services;
 
-public class TicketService : ITicketService
+public class TicketService(IDbContextFactory<ApplicationDbContext> contextFactory) : ITicketService
 {
-    private readonly IDbContextFactory<ApplicationDbContext> _contextFactory;
-    public TicketService(IDbContextFactory<ApplicationDbContext> contextFactory)
+    public async Task<TicketDto> CreateTicketAsync(CreateTicketDto request)
     {
-        _contextFactory = contextFactory;
+        var now = DateTime.Now;
+        
+        var newTicket = new Ticket
+        {
+            Id = 0,
+            Title = request.Title,
+            Description = request.Description,
+            CreatorId = request.CreatorId,
+            ModifierId = request.ModifierId,
+            CustomerId = request.CustomerId,
+            Status = request.Status,
+            Created = now,
+            Modified = now,
+            AssignedToId = request.AssignedToId
+        };
+
+        var dbContext = await contextFactory.CreateDbContextAsync();
+
+        await dbContext.Tickets.AddAsync(newTicket);
+        await dbContext.SaveChangesAsync();
+
+        return newTicket.ToDto();
     }
-    
-    public Task<TicketDto> CreateTicketAsync(CreateTicketDto request)
+
+    public async Task<TicketUpdateDto> UpdateTicketAsync(CreateTicketUpdateDto request)
     {
-        throw new NotImplementedException();
+        var now = DateTime.Now;
+
+        var newUpdate = new TicketUpdate
+        {
+            Id = 0,
+            Note = request.Note,
+            CreatorId = request.CreatorId,
+            Created = now,
+            Modified = now,
+            ModifierId = request.CreatorId,
+            HoursWorked = request.HoursWorked,
+            IsResolution = request.IsResolution,
+            TicketId = request.TicketId
+        };
+
+        var dbContext = await contextFactory.CreateDbContextAsync();
+
+        var ticketToUpdate = await dbContext.Tickets.FindAsync(request.TicketId);
+
+        if (ticketToUpdate is null)
+        {
+            throw new Exception($"Ticket with id: {request.TicketId} not found");
+        }
+        
+        if (request.ShouldUpdateStatus)
+        {
+            ticketToUpdate.Status = request.NewStatus;
+        }
+
+        await dbContext.AddAsync(newUpdate);
+        await dbContext.SaveChangesAsync();
+
+        return newUpdate.ToDto();
     }
 
     public async Task<CustomerDto[]> GetCustomersAsync()
     {
-        var dbContext = await _contextFactory.CreateDbContextAsync();
+        var dbContext = await contextFactory.CreateDbContextAsync();
 
         return await dbContext.Customers
             .AsNoTracking()
@@ -39,7 +91,7 @@ public class TicketService : ITicketService
 
     public async Task<List<TicketDto>> GetTicketsAsync(int itemsPerPage = 10, int currentPage = 1)
     {
-        var dbContext = await _contextFactory.CreateDbContextAsync();
+        var dbContext = await contextFactory.CreateDbContextAsync();
 
         return await dbContext.Tickets
             .Include(t => t.Creator)
@@ -55,14 +107,14 @@ public class TicketService : ITicketService
 
     public async Task<int> GetTicketCountAsync()
     {
-        var dbContext = await _contextFactory.CreateDbContextAsync();
+        var dbContext = await contextFactory.CreateDbContextAsync();
 
         return await dbContext.Tickets.CountAsync();
     }
 
     public async Task<TicketDto?> GetTicketByIdAsync(int ticketId)
     {
-        var dbContext = await _contextFactory.CreateDbContextAsync();
+        var dbContext = await contextFactory.CreateDbContextAsync();
 
         var ticket = await dbContext.Tickets.FindAsync(ticketId);
 

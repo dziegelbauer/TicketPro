@@ -1,7 +1,3 @@
-using Amazon;
-using Amazon.Runtime;
-using Amazon.SimpleSystemsManagement;
-using Amazon.SimpleSystemsManagement.Model;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -37,16 +33,8 @@ if (builder.Environment.IsDevelopment())
 }
 else
 {
-    var awsCredentials = new AnonymousAWSCredentials();
-    var awsClient = new AmazonSimpleSystemsManagementClient(awsCredentials, RegionEndpoint.USEast1);
-
-    var request = new GetParameterRequest()
-    {
-        Name = "/ticketpro/connectionString",
-        WithDecryption = true
-    };
-    var result = await awsClient.GetParameterAsync(request);
-    connectionString = result.Parameter.Value;
+    connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING") 
+                       ?? throw new InvalidOperationException("Cannot read CONNECTION_STRING");
 }
 
 builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
