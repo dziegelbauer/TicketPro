@@ -37,6 +37,8 @@ else
                        ?? throw new InvalidOperationException("Cannot read CONNECTION_STRING");
 }
 
+Console.WriteLine($"The connection string is:\n{connectionString}");
+
 builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
