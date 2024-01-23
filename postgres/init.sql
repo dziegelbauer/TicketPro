@@ -417,3 +417,61 @@ BEGIN
 END $EF$;
 COMMIT;
 
+START TRANSACTION;
+
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20240123023613_Seed_Users') THEN
+    UPDATE "AspNetRoles" SET "NormalizedName" = 'ADMIN'
+    WHERE "Id" = '104B3E6E-74E7-4CD5-B3BD-2D5567AE4101';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20240123023613_Seed_Users') THEN
+    UPDATE "AspNetRoles" SET "NormalizedName" = 'MANAGER'
+    WHERE "Id" = '3D8EEDC8-9B0C-4921-9681-4A55D35BD5DD';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20240123023613_Seed_Users') THEN
+    UPDATE "AspNetRoles" SET "NormalizedName" = 'EXECUTIVE'
+    WHERE "Id" = 'A83849D4-4393-4930-9C1A-319AA1572F59';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20240123023613_Seed_Users') THEN
+    UPDATE "AspNetRoles" SET "NormalizedName" = 'TECHNICIAN'
+    WHERE "Id" = 'F9D9FA29-3F33-4C3C-9CA2-A51B11581DB7';
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20240123023613_Seed_Users') THEN
+    INSERT INTO "AspNetUsers" ("Id", "AccessFailedCount", "ChargeableRate", "ConcurrencyStamp", "Email", "EmailConfirmed", "LockoutEnabled", "LockoutEnd", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "SecurityStamp", "TwoFactorEnabled", "UserName")
+    VALUES ('3aca033f-f48d-4a76-ba7c-ac58c629a7ec', 0, 0.0, '7edac54f-7633-49b3-8c90-16d35ef60d78', 'sjackson@lfrc.com', TRUE, TRUE, NULL, 'SJACKSON@LFRC.COM', 'SJACKSON@LFRC.COM', 'AQAAAAIAAYagAAAAEA0BPAhDLT/LEHuJKiiaJf3BLfFUXqifp5DPoT5RdDZRMRg9mbTSKxqX3sSJkPjqcA==', NULL, FALSE, 'EJGQIJIGPYKWNJSP2LHJZH47HK4NGRPJ', FALSE, 'sjackson@lfrc.com');
+    INSERT INTO "AspNetUsers" ("Id", "AccessFailedCount", "ChargeableRate", "ConcurrencyStamp", "Email", "EmailConfirmed", "LockoutEnabled", "LockoutEnd", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "SecurityStamp", "TwoFactorEnabled", "UserName")
+    VALUES ('6cf1351a-f2b6-4504-8d22-25b3dd5437e8', 0, 100.0, 'd3bf6453-5611-4846-ad5b-083dac66b928', 'dhart@lfrc.com', TRUE, TRUE, NULL, 'DHART@LFRC.COM', 'DHART@LFRC.COM', 'AQAAAAIAAYagAAAAECP8GDTUiYpawW2QH0jQrTb+AusonHhbxf6saK3/oCzmieXQpSy58vCmQe4sOLAgBQ==', NULL, FALSE, 'DXQ32QG3BZXE7V2QZC4HNL5G7FJB4EW7', FALSE, 'dhart@lfrc.com');
+    INSERT INTO "AspNetUsers" ("Id", "AccessFailedCount", "ChargeableRate", "ConcurrencyStamp", "Email", "EmailConfirmed", "LockoutEnabled", "LockoutEnd", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "SecurityStamp", "TwoFactorEnabled", "UserName")
+    VALUES ('afcd7a50-a4f1-4a5f-831c-94b945f10371', 0, 250.0, 'b1620237-28ff-4aef-b536-acb35ee49e4f', 'cdurbin@lfrc.com', TRUE, TRUE, NULL, 'CDURBIN@LFRC.COM', 'CDURBIN@LFRC.COM', 'AQAAAAIAAYagAAAAEC8zLHn4ZizET8ultmwR/nf14f4csdC0hr1NWDuwm9nHzamGBnZ1tlBd1LCtkmPaww==', NULL, FALSE, '5UMDLZ7ACFLFMOA637F2ZYXGTLUFY6G2', FALSE, 'cdurbin@lfrc.com');
+    INSERT INTO "AspNetUsers" ("Id", "AccessFailedCount", "ChargeableRate", "ConcurrencyStamp", "Email", "EmailConfirmed", "LockoutEnabled", "LockoutEnd", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "SecurityStamp", "TwoFactorEnabled", "UserName")
+    VALUES ('ecb59549-4167-4315-a89f-2bf998b1c289', 0, 0.0, 'dcb52449-7275-42ad-baea-3213d588c2be', 'mshoreheim@lfrc.com', TRUE, TRUE, NULL, 'MSHOREHEIM@LFRC.COM', 'MSHOREHEIM@LFRC.COM', 'AQAAAAIAAYagAAAAEO2wfiod2bMvxEqkDwbnFM88xtPo2gOSM0KrJ5nJJ4M38Dnx1Qk2WoXKiLPVpOF/ww==', NULL, FALSE, 'YS2QTXJ5CFFBKWKIVRJVQTDVCS6ZARIU', FALSE, 'mshoreheim@lfrc.com');
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "MigrationId" = '20240123023613_Seed_Users') THEN
+    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+    VALUES ('20240123023613_Seed_Users', '8.0.1');
+    END IF;
+END $EF$;
+COMMIT;
+
