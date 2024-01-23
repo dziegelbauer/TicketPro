@@ -13,4 +13,5 @@ public class CreateTicketUpdateDto
     public bool IsResolution { get; set; }
     public bool ShouldUpdateStatus { get; set; }
     public TicketStatus NewStatus { get; set; }
+    public int HoursWorked { get; set; }
 }

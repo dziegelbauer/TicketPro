@@ -37,8 +37,7 @@ if (builder.Environment.IsDevelopment())
 }
 else
 {
-    var awsCredentials = new AnonymousAWSCredentials();
-    var awsClient = new AmazonSimpleSystemsManagementClient(awsCredentials, RegionEndpoint.USEast1);
+    using var awsClient = new AmazonSimpleSystemsManagementClient();
 
     var request = new GetParameterRequest()
     {
