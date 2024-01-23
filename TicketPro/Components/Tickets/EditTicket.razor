@@ -1,0 +1,47 @@
+@page "/tickets/{TicketId:int}"
+@using TicketPro.Services
+@inject ITicketService TicketService
+@rendermode InteractiveServer
+@attribute [Authorize]
+
+@if (Ticket is null)
+{
+    <PageTitle>Loading...</PageTitle>
+
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+}
+else
+{
+    <PageTitle>Ticket @Ticket.Id</PageTitle>
+
+    <div class="card text-bg-dark mb-3 shadow">
+        <div class="card-header text-bg-secondary">#@Ticket.Id - @Ticket.Title</div>
+        <div class="card-body">
+            <h5 class="card-title">@Ticket.Title</h5>
+            <div></div>
+            <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+        </div>
+    </div>
+
+    <CreateTicketUpdateForm 
+        TicketId="TicketId"
+        InitialStatus="Ticket.Status"/>
+
+    @foreach (var update in Ticket.Updates)
+    {
+        <TicketUpdate TicketUpdateDto="update"/>
+    }
+}
+
+@code {
+    [Parameter] public int TicketId { get; set; }
+    private TicketDto? Ticket { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        Ticket = await TicketService.GetTicketByIdAsync(TicketId);
+    }
+}
+

@@ -20,10 +20,14 @@ public class Ticket
     [ForeignKey(nameof(AssignedTo))]
     public string? AssignedToId { get; set; }
     public ApplicationUser? AssignedTo { get; set; }
+    [ForeignKey(nameof(Customer))]
+    public int CustomerId { get; set; }
+    public Customer? Customer { get; set; }
     [Timestamp]
     public byte[]? Timestamp { get; set; }
     public DateTime Created { get; set; }
     public DateTime Modified { get; set; }
     public DateTime? Closed { get; set; }
     public TicketStatus Status { get; set; }
+    public ICollection<TicketUpdate> Updates { get; set; } = new List<TicketUpdate>();
 }

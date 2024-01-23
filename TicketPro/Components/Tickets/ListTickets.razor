@@ -1,0 +1,96 @@
+@page "/tickets/list/{CurrentPage:int?}"
+@using TicketPro.Services
+@inject NavigationManager NavigationManager
+@inject ITicketService TicketService
+
+<PageTitle>Manage Tickets</PageTitle>
+
+@if (Tickets is null)
+{
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+}
+else
+{
+    <div class="d-flex container-fluid justify-content-between align-items-center">
+        <ul class="pagination mt-3">
+            <li class="page-item @(CurrentPage == 1 ? "disabled" : "")">
+                <a class="page-link" href="/employees/list/@(CurrentPage - 1)">Previous</a>
+            </li>
+            @for (var i = 1; i <= TotalPages; i++)
+            {
+                <li class="page-item @(CurrentPage == i ? "active" : "")">
+                    <a class="page-link" href="/employees/list/@i">@i</a>
+                </li>
+            }
+            <li class="page-item @(CurrentPage == TotalPages ? "disabled" : "")">
+                <a class="page-link" href="/employees/list/@(CurrentPage + 1)">Next</a>
+            </li>
+        </ul>
+        <a class="btn btn-primary" href="/tickets/add">Create Ticket</a>
+    </div>
+    
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th>Id</th>
+            <th>Title</th>
+            <th>Status</th>
+            <th>Assigned To</th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var ticket in Tickets)
+        {
+            <tr>
+                <td>@ticket.Id</td>
+                <td>@ticket.Title</td>
+                <td>@ticket.Status.ToString()</td>
+                <td>@ticket.AssignedToName</td>
+                <td class="btn-group-sm">
+                    <a class="btn btn-outline-primary" href="/tickets/@ticket.Id">
+                        Update
+                    </a>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+
+@code {
+    [Parameter]
+    public int? CurrentPage { get; set; }
+    private List<TicketDto>? Tickets { get; set; }
+    private int TotalPages { get; set; }
+    private const int ItemsPerPage = 10;
+    
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        if (CurrentPage is null or < 1)
+        {
+            NavigationManager.NavigateTo("/tickets/list/1");
+            return;
+        }
+        
+        var employeeCount = await TicketService.GetTicketCountAsync();
+        TotalPages = employeeCount == 0
+            ? 1
+            : (int)Math.Ceiling((double)employeeCount / ItemsPerPage);
+
+        if (CurrentPage > TotalPages)
+        {
+            NavigationManager.NavigateTo($"/employees/list/{TotalPages}");
+            return;
+        }
+
+        Tickets = await TicketService.GetTicketsAsync(itemsPerPage: ItemsPerPage, currentPage: CurrentPage ?? 1);
+    }
+}

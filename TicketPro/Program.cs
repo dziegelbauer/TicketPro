@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using TicketPro.Components;
 using TicketPro.Components.Account;
 using TicketPro.Data;
+using TicketPro.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -48,7 +49,7 @@ else
     connectionString = result.Parameter.Value;
 }
 
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
+builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
@@ -57,9 +58,23 @@ builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.Requ
     .AddSignInManager()
     .AddDefaultTokenProviders();
 
+builder.Services.AddScoped<ITicketService, TicketService>();
+
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
 
 var app = builder.Build();
+
+await EnsureDatabaseIsCurrent(app.Services);
+
+async Task EnsureDatabaseIsCurrent(IServiceProvider appServices)
+{
+    using var scope = appServices.CreateScope();
+    await using var ctx = scope.ServiceProvider.GetService<ApplicationDbContext>();
+    if (ctx is not null)
+    {
+        await ctx.Database.MigrateAsync();
+    }
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

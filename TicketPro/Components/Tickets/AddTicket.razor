@@ -1,0 +1,145 @@
+@page "/tickets/add"
+@using TicketPro.Data.Models
+@using TicketPro.Services
+@inject ITicketService TicketService
+@rendermode InteractiveServer
+@attribute [Authorize]
+
+<PageTitle>Create Ticket</PageTitle>
+
+<h1>Create Ticket</h1>
+
+@if (CreationRequest is not null)
+{
+    <EditForm
+        Model="CreationRequest"
+        FormName="CreateTicket"
+        OnValidSubmit="HandleValidSubmitAsync">
+        <DataAnnotationsValidator/>
+        <div class="mb-3 form-floating">
+            <InputText
+                class="form-control"
+                @bind-Value="CreationRequest.Title"
+                id="title"
+                placeholder="Title"/>
+            <label for="title" class="form-label">Title</label>
+            <ValidationMessage For="() => CreationRequest.Title"/>
+        </div>
+        @if (Customers is not null)
+        {
+            <div class="mb-3 form-floating">
+                <InputSelect
+                    class="form-select"
+                    @bind-Value="CreationRequest.CustomerId"
+                    id="customer">
+                    @foreach (var customer in Customers)
+                    {
+                        <option value="@customer.Id">@customer.Name</option>
+                    }
+                </InputSelect>
+                <label class="form-label" for="customer">Customer</label>
+                <ValidationMessage For="() => CreationRequest.CustomerId"></ValidationMessage>
+            </div>
+        }
+        <div class="mb-3 form-floating">
+            <InputSelect
+                class="form-select"
+                @bind-Value="CreationRequest.Status"
+                id="status">
+                @foreach (var statusName in TicketStatusMap.Keys)
+                {
+                    <option value="@TicketStatusMap[statusName]">@statusName</option>
+                }
+            </InputSelect>
+            <label class="form-label" for="status">Status</label>
+        </div>
+        <div class="mb-3 form-floating">
+            <InputTextArea
+                class="form-control"
+                @bind-Value="CreationRequest.Description"
+                id="description"
+                placeholder="Description"
+                style="height: 20em"/>
+            <label for="description" class="form-label">Description</label>
+            <ValidationMessage For="() => CreationRequest.Description"/>
+        </div>
+        <button class="btn btn-primary">Create</button>
+    </EditForm>
+}
+
+@if (SuccessMessage is not null)
+{
+    <br/>
+    <div class="alert alert-success">@SuccessMessage</div>
+}
+
+@if (ErrorMessage is not null)
+{
+    <br/>
+    <div class="alert alert-danger">@ErrorMessage</div>
+}
+
+@code
+{
+    private CreateTicketDto? CreationRequest { get; set; }
+    private string? SuccessMessage { get; set; }
+    private string? ErrorMessage { get; set; }
+    private Dictionary<string, TicketStatus> TicketStatusMap { get; set; } = new();
+    private CustomerDto[]? Customers { get; set; }
+    private bool IsBusy { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        CreationRequest = new CreateTicketDto
+        {
+            Created = DateTime.Now,
+            Modified = DateTime.Now,
+            Title = "",
+            Description = ""
+        };
+
+        foreach (var statusName in Enum.GetNames<TicketStatus>())
+        {
+            TicketStatusMap.Add(statusName, Enum.Parse<TicketStatus>(statusName));
+        }
+
+        Customers = await TicketService.GetCustomersAsync();
+    }
+
+    private async Task HandleValidSubmitAsync()
+    {
+        if (IsBusy)
+        {
+            return;
+        }
+
+        IsBusy = true;
+        try
+        {
+            if (CreationRequest is not null)
+            {
+                var ticket = await TicketService.CreateTicketAsync(CreationRequest);
+
+                SuccessMessage = $"Ticket {ticket.Id} was added successfully";
+                ErrorMessage = null;
+
+                CreationRequest = new CreateTicketDto
+                {
+                    Created = DateTime.Now,
+                    Modified = DateTime.Now,
+                    Title = "",
+                    Description = ""
+                };
+            }
+        }
+        catch (Exception e)
+        {
+            SuccessMessage = null;
+            ErrorMessage = $"Error while adding ticket: {e.Message}";
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+}

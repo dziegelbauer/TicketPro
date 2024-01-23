@@ -1,0 +1,14 @@
+@using System.Globalization
+<div class="card text-bg-dark mb-3 shadow">
+        <div class="card-header">@TicketUpdateDto?.Created.ToString(CultureInfo.InvariantCulture)</div>
+        <div class="card-body">
+            <h5 class="card-title">@TicketUpdateDto?.CreatorName</h5>
+            <div></div>
+            <p class="card-text">@TicketUpdateDto?.Note</p>
+        </div>
+    </div>
+
+@code {
+    [Parameter]
+    public TicketUpdateDto? TicketUpdateDto { get; set; }
+}

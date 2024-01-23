@@ -20,6 +20,6 @@ public class TicketUpdate
     public byte[]? Timestamp { get; set; }
     [ForeignKey(nameof(Ticket))]
     public int TicketId { get; set; }
-    public Ticket? Ticket { get; set; }
+    public Ticket Ticket { get; set; } = null!;
     public int HoursWorked { get; set; }
 }
