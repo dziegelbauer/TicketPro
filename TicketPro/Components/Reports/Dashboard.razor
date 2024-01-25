@@ -5,11 +5,13 @@
 @rendermode InteractiveServer
 @attribute [Authorize]
 
+<PageTitle>Report Dashboard</PageTitle>
+
 @if (TechnicianRevenueData is not null)
 {
     <div class="row mb-3">
         <div class="col-4">
-            <SfChart Title="Revenue by Technician">
+            <SfChart Title="Revenue by Technician" Palettes="@BarColors">
                 <ChartPrimaryXAxis Title="Technician" ValueType="Syncfusion.Blazor.Charts.ValueType.Category"/>
                 <ChartPrimaryYAxis Title="Revenue in Dollars"/>
                 <ChartTooltipSettings Enable="true"></ChartTooltipSettings>
@@ -19,7 +21,7 @@
             </SfChart>
         </div>
         <div class="col-4">
-            <SfChart Title="Closed Tickets by Technician">
+            <SfChart Title="Closed Tickets by Technician" Palettes="@BarColors">
                 <ChartPrimaryXAxis Title="Technician" ValueType="Syncfusion.Blazor.Charts.ValueType.Category"/>
                 <ChartPrimaryYAxis Title="Closed Tickets"/>
                 <ChartTooltipSettings Enable="true"></ChartTooltipSettings>
@@ -29,7 +31,7 @@
             </SfChart>
         </div>
         <div class="col-4">
-            <SfChart Title="Billable Hours by Technician">
+            <SfChart Title="Billable Hours by Technician" Palettes="@BarColors">
                 <ChartPrimaryXAxis Title="Technician" ValueType="Syncfusion.Blazor.Charts.ValueType.Category"/>
                 <ChartPrimaryYAxis Title="Billable Hours"/>
                 <ChartTooltipSettings Enable="true"></ChartTooltipSettings>
@@ -51,7 +53,7 @@ else
 {
     <div class="row">
         <div class="col-4">
-            <SfChart Title="Revenue by Customer">
+            <SfChart Title="Revenue by Customer" Palettes="@BarColors">
                 <ChartPrimaryXAxis Title="Customer" ValueType="Syncfusion.Blazor.Charts.ValueType.Category"/>
                 <ChartPrimaryYAxis Title="Revenue in Dollars"/>
                 <ChartTooltipSettings Enable="true"></ChartTooltipSettings>
@@ -61,7 +63,7 @@ else
             </SfChart>
         </div>
         <div class="col-4">
-            <SfChart Title="Closed Tickets by Customer">
+            <SfChart Title="Closed Tickets by Customer" Palettes="@BarColors">
                 <ChartPrimaryXAxis Title="Customer" ValueType="Syncfusion.Blazor.Charts.ValueType.Category"/>
                 <ChartPrimaryYAxis Title="Closed Tickets"/>
                 <ChartTooltipSettings Enable="true"></ChartTooltipSettings>
@@ -71,7 +73,7 @@ else
             </SfChart>
         </div>
         <div class="col-4">
-            <SfChart Title="Billable Hours by Customer">
+            <SfChart Title="Billable Hours by Customer" Palettes="@BarColors">
                 <ChartPrimaryXAxis Title="Customer" ValueType="Syncfusion.Blazor.Charts.ValueType.Category"/>
                 <ChartPrimaryYAxis Title="Billable Hours"/>
                 <ChartTooltipSettings Enable="true"></ChartTooltipSettings>
@@ -92,6 +94,7 @@ else
 @code {
     private List<TechnicianRevenueDto>? TechnicianRevenueData { get; set; }
     private List<CustomerRevenueDto>? CustomerRevenueData { get; set; }
+    private string[] BarColors = { "#0d6efd" };
 
     protected override async Task OnInitializedAsync()
     {
