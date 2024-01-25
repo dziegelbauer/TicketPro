@@ -27,18 +27,8 @@ builder.Services.AddAuthentication(options =>
     })
     .AddIdentityCookies();
 
-string connectionString;
-
-if (builder.Environment.IsDevelopment())
-{
-    connectionString = builder.Configuration.GetConnectionString("DockerDb") ??
-                       throw new InvalidOperationException("Connection string 'DockerDb' not found.");
-}
-else
-{
-    connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING") 
+var connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING") 
                        ?? throw new InvalidOperationException("Cannot read CONNECTION_STRING");
-}
 
 builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
 {
