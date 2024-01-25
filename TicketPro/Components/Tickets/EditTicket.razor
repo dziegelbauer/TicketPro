@@ -38,6 +38,7 @@ else
                 Model="UpdateTicketRequest"
                 FormName="UpdateTicket"
                 OnValidSubmit="HandleValidSubmitAsync">
+                <DataAnnotationsValidator/>
                 <div class="row mb-3">
                     <div class="input-group col">
                         <span class="input-group-text">Status</span>
@@ -117,6 +118,7 @@ else
                         style="height: 40em;"/>
                     <label class="form-label" for="description">Description</label>
                 </div>
+                <ValidationSummary/>
                 <button class="btn btn-primary" type="submit" disabled="@IsBusy">Update</button>
                 <button class="btn btn-secondary" type="button" @onclick="NavigateToTicketList">Back</button>
             </EditForm>

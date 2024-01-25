@@ -2,6 +2,7 @@
 @using TicketPro.Services
 @using TicketPro.Components.State
 @using Microsoft.EntityFrameworkCore
+@using TicketPro.Data.Models
 @inject NavigationManager NavigationManager
 @inject ITicketService TicketService
 @inject TicketListStateContainer TicketListStateContainer
@@ -35,20 +36,6 @@ else
             </li>
         </ul>
         <a class="btn btn-primary" href="/tickets/add">Create Ticket</a>
-    </div>
-    <div class="row mb-3">
-        <div class="input-group col">
-            <InputText
-                type="text"
-                @bind-Value="SearchString"
-                class="form-control"
-                placeholder="Search..."
-                aria-label="Search"
-                aria-describedby="button-search"/>
-            <button class="btn btn-outline-secondary" type="button" id="button-search">
-                <span class="bi bi-search"></span>Search
-            </button>
-        </div>
     </div>
 
     <table class="table table-striped">
@@ -94,7 +81,6 @@ else
     private List<TicketDto>? Tickets { get; set; }
     private int TotalPages { get; set; }
     private const int ItemsPerPage = 10;
-    private string SearchString { get; set; }= string.Empty;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -146,4 +132,9 @@ else
         }
     }
 
+    public class StatusFilter
+    {
+        public string Text { get; set; } = string.Empty;
+        public TicketStatus Value { get; set; }
+    }
 }
