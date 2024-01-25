@@ -6,6 +6,7 @@
 @inject ITicketService TicketService
 @inject TicketListStateContainer TicketListStateContainer
 @inject IJSRuntime JS
+@rendermode InteractiveServer
 @attribute [Authorize]
 
 <PageTitle>Manage Tickets</PageTitle>
@@ -18,7 +19,7 @@
 }
 else
 {
-    <div class="d-flex container-fluid justify-content-between align-items-center">
+    <div class="d-flex justify-content-between align-items-center">
         <ul class="pagination mt-3">
             <li class="page-item @(CurrentPage == 1 ? "disabled" : "")">
                 <a class="page-link" href="/tickets/list/@(CurrentPage - 1)">Previous</a>
