@@ -1,3 +1,4 @@
+using TicketPro.Data;
 using TicketPro.Data.Models;
 using TicketPro.DTO;
 
@@ -13,31 +14,35 @@ public static class ToDtoConversions
             Title = t.Title,
             Description = t.Description,
             CreatorId = t.CreatorId,
-            CreatorName = t.Creator?.UserName,
+            CreatorName = t.Creator != null
+                ? $"{t.Creator.FirstName} {t.Creator.LastName}"
+                : null,
             ModifierId = t.ModifierId,
-            ModifierName = t.Modifier?.UserName,
+            ModifierName = t.Modifier != null
+                ? $"{t.Modifier.FirstName} {t.Modifier.LastName}"
+                : null,
             AssignedToId = t.AssignedToId,
-            AssignedToName = t.AssignedTo?.UserName,
+            AssignedToName = t.AssignedTo != null
+                ? $"{t.AssignedTo.FirstName} {t.AssignedTo.LastName}"
+                : null,
+            CustomerId = t.CustomerId,
+            CustomerName = t.Customer?.Name,
             Created = t.Created,
             Modified = t.Modified,
             Closed = t.Closed,
             Status = t.Status,
-            Updates = t.Updates.Select(u => u.ToDto()).ToList()
+            BillableHours = t.BillableHours
         };
     }
 
-    public static TicketUpdateDto ToDto(this TicketUpdate tu)
+    public static UserDto ToDto(this ApplicationUser u)
     {
-        return new TicketUpdateDto
+        return new UserDto
         {
-            Note = tu.Note,
-            IsResolution = tu.IsResolution,
-            CreatorId = tu.CreatorId,
-            CreatorName = tu.Creator?.UserName,
-            ModifierId = tu.ModifierId,
-            ModifierName = tu.Modifier?.UserName,
-            Created = tu.Created,
-            Modified = tu.Modified
+            Id = u.Id,
+            FirstName = u.FirstName,
+            LastName = u.LastName,
+            Email = u.Email
         };
     }
 }

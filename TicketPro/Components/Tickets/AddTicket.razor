@@ -1,7 +1,11 @@
 @page "/tickets/add"
 @using TicketPro.Data.Models
 @using TicketPro.Services
+@using TicketPro.Components.State
 @inject ITicketService TicketService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+@inject TicketListStateContainer TicketListStateContainer
 @rendermode InteractiveServer
 @attribute [Authorize]
 
@@ -11,60 +15,79 @@
 
 @if (CreationRequest is not null)
 {
-    <EditForm
-        Model="CreationRequest"
-        FormName="CreateTicket"
-        OnValidSubmit="HandleValidSubmitAsync">
-        <DataAnnotationsValidator/>
-        <div class="mb-3 form-floating">
-            <InputText
-                class="form-control"
-                @bind-Value="CreationRequest.Title"
-                id="title"
-                placeholder="Title"/>
-            <label for="title" class="form-label">Title</label>
-            <ValidationMessage For="() => CreationRequest.Title"/>
-        </div>
-        @if (Customers is not null)
-        {
-            <div class="mb-3 form-floating">
-                <InputSelect
-                    class="form-select"
-                    @bind-Value="CreationRequest.CustomerId"
-                    id="customer">
-                    @foreach (var customer in Customers)
-                    {
-                        <option value="@customer.Id">@customer.Name</option>
-                    }
-                </InputSelect>
-                <label class="form-label" for="customer">Customer</label>
-                <ValidationMessage For="() => CreationRequest.CustomerId"></ValidationMessage>
-            </div>
-        }
-        <div class="mb-3 form-floating">
-            <InputSelect
-                class="form-select"
-                @bind-Value="CreationRequest.Status"
-                id="status">
-                @foreach (var statusName in TicketStatusMap.Keys)
+    <div class="card text-bg-dark mb-3 shadow">
+        <div class="card-body text-black">
+            <EditForm
+                Model="CreationRequest"
+                FormName="CreateTicket"
+                OnValidSubmit="HandleValidSubmitAsync">
+                <DataAnnotationsValidator/>
+                <div class="mb-3 form-floating">
+                    <InputText
+                        class="form-control"
+                        @bind-Value="CreationRequest.Title"
+                        id="title"
+                        placeholder="Title"/>
+                    <label for="title" class="form-label">Title</label>
+                    <ValidationMessage For="() => CreationRequest.Title"/>
+                </div>
+                @if (Customers is not null)
                 {
-                    <option value="@TicketStatusMap[statusName]">@statusName</option>
+                    <div class="mb-3 form-floating">
+                        <InputSelect
+                            class="form-select"
+                            @bind-Value="CreationRequest.CustomerId"
+                            id="customer">
+                            @foreach (var customer in Customers)
+                            {
+                                <option value="@customer.Id">@customer.Name</option>
+                            }
+                        </InputSelect>
+                        <label class="form-label" for="customer">Customer</label>
+                        <ValidationMessage For="() => CreationRequest.CustomerId"></ValidationMessage>
+                    </div>
                 }
-            </InputSelect>
-            <label class="form-label" for="status">Status</label>
+                <div class="mb-3 form-floating">
+                    <InputSelect
+                        class="form-select"
+                        @bind-Value="CreationRequest.AssignedToId"
+                        id="assignedTo">
+                        <option selected>Unassigned</option>
+                        @foreach (var technician in Technicians)
+                        {
+                            <option value="@technician.Id">@technician.FirstName @technician.LastName</option>
+                        }
+                    </InputSelect>
+                    <label class="form-label" for="assignedTo">Assign to:</label>
+                    <ValidationMessage For="() => CreationRequest.AssignedToId"></ValidationMessage>
+                </div>
+                <div class="mb-3 form-floating">
+                    <InputSelect
+                        class="form-select"
+                        @bind-Value="CreationRequest.Status"
+                        id="status">
+                        @foreach (var statusName in TicketStatusMap.Keys)
+                        {
+                            <option value="@TicketStatusMap[statusName]">@statusName</option>
+                        }
+                    </InputSelect>
+                    <label class="form-label" for="status">Status</label>
+                </div>
+                <div class="mb-3 form-floating">
+                    <InputTextArea
+                        class="form-control"
+                        @bind-Value="CreationRequest.Description"
+                        id="description"
+                        placeholder="Description"
+                        style="height: 20em"/>
+                    <label for="description" class="form-label">Description</label>
+                    <ValidationMessage For="() => CreationRequest.Description"/>
+                </div>
+                <button class="btn btn-primary" type="submit" disabled="@IsBusy">Create</button>
+                <button class="btn btn-secondary" type="button" @onclick="NavigateToTicketList">Back</button>
+            </EditForm>
         </div>
-        <div class="mb-3 form-floating">
-            <InputTextArea
-                class="form-control"
-                @bind-Value="CreationRequest.Description"
-                id="description"
-                placeholder="Description"
-                style="height: 20em"/>
-            <label for="description" class="form-label">Description</label>
-            <ValidationMessage For="() => CreationRequest.Description"/>
-        </div>
-        <button class="btn btn-primary">Create</button>
-    </EditForm>
+    </div>
 }
 
 @if (SuccessMessage is not null)
@@ -86,14 +109,13 @@
     private string? ErrorMessage { get; set; }
     private Dictionary<string, TicketStatus> TicketStatusMap { get; set; } = new();
     private CustomerDto[]? Customers { get; set; }
+    private List<UserDto> Technicians { get; set; } = [];
     private bool IsBusy { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
         CreationRequest = new CreateTicketDto
         {
-            Created = DateTime.Now,
-            Modified = DateTime.Now,
             Title = "",
             Description = ""
         };
@@ -104,6 +126,7 @@
         }
 
         Customers = await TicketService.GetCustomersAsync();
+        Technicians = await TicketService.GetTechniciansAsync();
     }
 
     private async Task HandleValidSubmitAsync()
@@ -118,6 +141,9 @@
         {
             if (CreationRequest is not null)
             {
+                var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+                var loggedInUser = authState.User;
+                CreationRequest.Creator = loggedInUser.Identity?.Name;
                 var ticket = await TicketService.CreateTicketAsync(CreationRequest);
 
                 SuccessMessage = $"Ticket {ticket.Id} was added successfully";
@@ -125,8 +151,6 @@
 
                 CreationRequest = new CreateTicketDto
                 {
-                    Created = DateTime.Now,
-                    Modified = DateTime.Now,
                     Title = "",
                     Description = ""
                 };
@@ -142,4 +166,10 @@
             IsBusy = false;
         }
     }
+    
+    private void NavigateToTicketList()
+    {
+        NavigationManager.NavigateTo($"/tickets/list/{TicketListStateContainer.TicketListPage}");
+    }
 }
+

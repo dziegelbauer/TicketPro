@@ -29,5 +29,5 @@ public class Ticket
     public DateTime Modified { get; set; }
     public DateTime? Closed { get; set; }
     public TicketStatus Status { get; set; }
-    public ICollection<TicketUpdate> Updates { get; set; } = new List<TicketUpdate>();
+    public int BillableHours { get; set; }
 }

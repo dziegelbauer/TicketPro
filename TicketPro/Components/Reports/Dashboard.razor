@@ -1,0 +1,102 @@
+@page "/dashboard"
+@using Syncfusion.Blazor.Charts
+@using TicketPro.Services
+@inject ITicketService TicketService
+@rendermode InteractiveServer
+@attribute [Authorize]
+
+@if (TechnicianRevenueData is not null)
+{
+    <div class="row mb-3">
+        <div class="col-4">
+            <SfChart Title="Revenue by Technician">
+                <ChartPrimaryXAxis Title="Technician" ValueType="Syncfusion.Blazor.Charts.ValueType.Category"/>
+                <ChartPrimaryYAxis Title="Revenue in Dollars"/>
+                <ChartTooltipSettings Enable="true"></ChartTooltipSettings>
+                <ChartSeriesCollection>
+                    <ChartSeries DataSource="@TechnicianRevenueData" XName="TechnicianName" YName="TotalRevenue" Type="ChartSeriesType.Column"/>
+                </ChartSeriesCollection>
+            </SfChart>
+        </div>
+        <div class="col-4">
+            <SfChart Title="Closed Tickets by Technician">
+                <ChartPrimaryXAxis Title="Technician" ValueType="Syncfusion.Blazor.Charts.ValueType.Category"/>
+                <ChartPrimaryYAxis Title="Closed Tickets"/>
+                <ChartTooltipSettings Enable="true"></ChartTooltipSettings>
+                <ChartSeriesCollection>
+                    <ChartSeries DataSource="@TechnicianRevenueData" XName="TechnicianName" YName="TotalTickets" Type="ChartSeriesType.Column"/>
+                </ChartSeriesCollection>
+            </SfChart>
+        </div>
+        <div class="col-4">
+            <SfChart Title="Billable Hours by Technician">
+                <ChartPrimaryXAxis Title="Technician" ValueType="Syncfusion.Blazor.Charts.ValueType.Category"/>
+                <ChartPrimaryYAxis Title="Billable Hours"/>
+                <ChartTooltipSettings Enable="true"></ChartTooltipSettings>
+                <ChartSeriesCollection>
+                    <ChartSeries DataSource="@TechnicianRevenueData" XName="TechnicianName" YName="TotalHours" Type="ChartSeriesType.Column"/>
+                </ChartSeriesCollection>
+            </SfChart>
+        </div>
+    </div>
+}
+else
+{
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+}
+
+@if (CustomerRevenueData is not null)
+{
+    <div class="row">
+        <div class="col-4">
+            <SfChart Title="Revenue by Customer">
+                <ChartPrimaryXAxis Title="Customer" ValueType="Syncfusion.Blazor.Charts.ValueType.Category"/>
+                <ChartPrimaryYAxis Title="Revenue in Dollars"/>
+                <ChartTooltipSettings Enable="true"></ChartTooltipSettings>
+                <ChartSeriesCollection>
+                    <ChartSeries DataSource="@CustomerRevenueData" XName="CustomerName" YName="TotalRevenue" Type="ChartSeriesType.Column"/>
+                </ChartSeriesCollection>
+            </SfChart>
+        </div>
+        <div class="col-4">
+            <SfChart Title="Closed Tickets by Customer">
+                <ChartPrimaryXAxis Title="Customer" ValueType="Syncfusion.Blazor.Charts.ValueType.Category"/>
+                <ChartPrimaryYAxis Title="Closed Tickets"/>
+                <ChartTooltipSettings Enable="true"></ChartTooltipSettings>
+                <ChartSeriesCollection>
+                    <ChartSeries DataSource="@CustomerRevenueData" XName="CustomerName" YName="TotalTickets" Type="ChartSeriesType.Column"/>
+                </ChartSeriesCollection>
+            </SfChart>
+        </div>
+        <div class="col-4">
+            <SfChart Title="Billable Hours by Customer">
+                <ChartPrimaryXAxis Title="Customer" ValueType="Syncfusion.Blazor.Charts.ValueType.Category"/>
+                <ChartPrimaryYAxis Title="Billable Hours"/>
+                <ChartTooltipSettings Enable="true"></ChartTooltipSettings>
+                <ChartSeriesCollection>
+                    <ChartSeries DataSource="@CustomerRevenueData" XName="CustomerName" YName="TotalHours" Type="ChartSeriesType.Column"/>
+                </ChartSeriesCollection>
+            </SfChart>
+        </div>
+    </div>
+}
+else
+{
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+}
+
+@code {
+    private List<TechnicianRevenueDto>? TechnicianRevenueData { get; set; }
+    private List<CustomerRevenueDto>? CustomerRevenueData { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        TechnicianRevenueData = await TicketService.GetTechnicianRevenueDataAsync();
+        CustomerRevenueData = await TicketService.GetCustomerRevenueDataAsync();
+    }
+
+}

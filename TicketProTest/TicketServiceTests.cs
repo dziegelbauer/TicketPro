@@ -45,8 +45,7 @@ public class TicketServiceTests
         var creationRequest = new CreateTicketDto
         {
             CustomerId = 1,
-            CreatorId = null,
-            ModifierId = null,
+            Creator = null,
             AssignedToId = null,
             Description = "This is a test",
             Modified = DateTime.Now,

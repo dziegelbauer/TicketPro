@@ -12,8 +12,8 @@ using TicketPro.Data;
 namespace TicketPro.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240120144114_Add_Customer_Entity")]
-    partial class Add_Customer_Entity
+    [Migration("20240123223659_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -49,6 +49,32 @@ namespace TicketPro.Data.Migrations
                         .HasDatabaseName("RoleNameIndex");
 
                     b.ToTable("AspNetRoles", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = "104B3E6E-74E7-4CD5-B3BD-2D5567AE4101",
+                            Name = "Admin",
+                            NormalizedName = "ADMIN"
+                        },
+                        new
+                        {
+                            Id = "A83849D4-4393-4930-9C1A-319AA1572F59",
+                            Name = "Executive",
+                            NormalizedName = "EXECUTIVE"
+                        },
+                        new
+                        {
+                            Id = "3D8EEDC8-9B0C-4921-9681-4A55D35BD5DD",
+                            Name = "Manager",
+                            NormalizedName = "MANAGER"
+                        },
+                        new
+                        {
+                            Id = "F9D9FA29-3F33-4C3C-9CA2-A51B11581DB7",
+                            Name = "Technician",
+                            NormalizedName = "TECHNICIAN"
+                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -165,6 +191,9 @@ namespace TicketPro.Data.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("integer");
 
+                    b.Property<decimal>("ChargeableRate")
+                        .HasColumnType("numeric");
+
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
                         .HasColumnType("text");
@@ -175,6 +204,14 @@ namespace TicketPro.Data.Migrations
 
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("boolean");
+
+                    b.Property<string>("FirstName")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("LastName")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("boolean");
@@ -247,6 +284,35 @@ namespace TicketPro.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Customers");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            City = "Sheboygan",
+                            Name = "Rogers Steel",
+                            State = "MI",
+                            StreetAddress = "123 Wasilla Way",
+                            Zip = "12345"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            City = "Toledo",
+                            Name = "Brown Motors",
+                            State = "OH",
+                            StreetAddress = "1042 Grand Avenue",
+                            Zip = "23456"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            City = "Big Spur",
+                            Name = "Appliance Masters",
+                            State = "IN",
+                            StreetAddress = "23 Highland Ridge Road",
+                            Zip = "34567"
+                        });
                 });
 
             modelBuilder.Entity("TicketPro.Data.Models.Ticket", b =>
@@ -259,6 +325,9 @@ namespace TicketPro.Data.Migrations
 
                     b.Property<string>("AssignedToId")
                         .HasColumnType("text");
+
+                    b.Property<int>("BillableHours")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime?>("Closed")
                         .HasColumnType("timestamp with time zone");
@@ -306,50 +375,6 @@ namespace TicketPro.Data.Migrations
                     b.HasIndex("ModifierId");
 
                     b.ToTable("Tickets");
-                });
-
-            modelBuilder.Entity("TicketPro.Data.Models.TicketUpdate", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("Created")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("CreatorId")
-                        .HasColumnType("text");
-
-                    b.Property<bool>("IsResolution")
-                        .HasColumnType("boolean");
-
-                    b.Property<DateTime>("Modified")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("ModifierId")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Note")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("TicketId")
-                        .HasColumnType("integer");
-
-                    b.Property<byte[]>("Timestamp")
-                        .HasColumnType("bytea");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CreatorId");
-
-                    b.HasIndex("ModifierId");
-
-                    b.HasIndex("TicketId");
-
-                    b.ToTable("TicketUpdates");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -430,29 +455,6 @@ namespace TicketPro.Data.Migrations
                     b.Navigation("Customer");
 
                     b.Navigation("Modifier");
-                });
-
-            modelBuilder.Entity("TicketPro.Data.Models.TicketUpdate", b =>
-                {
-                    b.HasOne("TicketPro.Data.ApplicationUser", "Creator")
-                        .WithMany()
-                        .HasForeignKey("CreatorId");
-
-                    b.HasOne("TicketPro.Data.ApplicationUser", "Modifier")
-                        .WithMany()
-                        .HasForeignKey("ModifierId");
-
-                    b.HasOne("TicketPro.Data.Models.Ticket", "Ticket")
-                        .WithMany()
-                        .HasForeignKey("TicketId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Creator");
-
-                    b.Navigation("Modifier");
-
-                    b.Navigation("Ticket");
                 });
 #pragma warning restore 612, 618
         }

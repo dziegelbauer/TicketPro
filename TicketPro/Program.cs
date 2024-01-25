@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Syncfusion.Blazor;
 using TicketPro.Components;
 using TicketPro.Components.Account;
+using TicketPro.Components.State;
 using TicketPro.Data;
 using TicketPro.Services;
 
@@ -16,6 +18,7 @@ builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<IdentityUserAccessor>();
 builder.Services.AddScoped<IdentityRedirectManager>();
 builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
+builder.Services.AddScoped<TicketListStateContainer>();
 
 builder.Services.AddAuthentication(options =>
     {
@@ -37,13 +40,18 @@ else
                        ?? throw new InvalidOperationException("Cannot read CONNECTION_STRING");
 }
 
-Console.WriteLine($"The connection string is:\n{connectionString}");
-
 builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
-    options.UseNpgsql(connectionString));
+{
+    options.UseNpgsql(connectionString);
+    if (builder.Environment.IsDevelopment())
+    {
+        options.EnableSensitiveDataLogging();
+    }
+});
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
+    .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddSignInManager()
     .AddDefaultTokenProviders();
@@ -52,7 +60,13 @@ builder.Services.AddScoped<ITicketService, TicketService>();
 
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
 
+builder.Services.AddSyncfusionBlazor();
+builder.Services.AddSignalR(options => options.MaximumReceiveMessageSize = 65536);
+
 var app = builder.Build();
+
+var syncfusionLicenseKey = Environment.GetEnvironmentVariable("SYNCFUSION_KEY");
+Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense(syncfusionLicenseKey);
 
 await EnsureDatabaseIsCurrent(app.Services);
 

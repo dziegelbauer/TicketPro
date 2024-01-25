@@ -1,47 +1,217 @@
 @page "/tickets/{TicketId:int}"
 @using TicketPro.Services
+@using TicketPro.Data.Models
+@using Microsoft.EntityFrameworkCore
+@using TicketPro.Components.State
 @inject ITicketService TicketService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+@inject TicketListStateContainer TicketListStateContainer
 @rendermode InteractiveServer
 @attribute [Authorize]
 
 @if (Ticket is null)
 {
-    <PageTitle>Loading...</PageTitle>
+    if (IsBusy)
+    {
+        <PageTitle>Loading...</PageTitle>
 
-    <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Loading...</span>
-    </div>
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    }
+    else
+    {
+        <PageTitle>Ticket @TicketId</PageTitle>
+
+        <div class="alert alert-danger">Ticket @TicketId not found</div>
+    }
 }
 else
 {
     <PageTitle>Ticket @Ticket.Id</PageTitle>
 
     <div class="card text-bg-dark mb-3 shadow">
-        <div class="card-header text-bg-secondary">#@Ticket.Id - @Ticket.Title</div>
+        <div class="card-header text-bg-secondary">#@Ticket.Id - @UpdateTicketRequest.Title</div>
         <div class="card-body">
-            <h5 class="card-title">@Ticket.Title</h5>
-            <div></div>
-            <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+            <EditForm
+                Model="UpdateTicketRequest"
+                FormName="UpdateTicket"
+                OnValidSubmit="HandleValidSubmitAsync">
+                <div class="row mb-3">
+                    <div class="input-group col">
+                        <span class="input-group-text">Status</span>
+                        <InputSelect
+                            class="form-select"
+                            @bind-Value="@UpdateTicketRequest.Status"
+                            id="status">
+                            @foreach (var statusName in TicketStatusMap.Keys)
+                            {
+                                <option value="@TicketStatusMap[statusName]">@statusName</option>
+                            }
+                        </InputSelect>
+                    </div>
+                    <div class="input-group col">
+                        <span class="input-group-text">Customer:</span>
+                        <InputSelect
+                            class="form-select"
+                            @bind-Value="@UpdateTicketRequest.CustomerId"
+                            id="customer">
+                            @foreach (var customer in Customers)
+                            {
+                                <option value="@customer.Id">@customer.Name</option>
+                            }
+                        </InputSelect>
+                    </div>
+                    <div class="input-group col">
+                        <span class="input-group-text">Assigned to:</span>
+                        <InputSelect
+                            class="form-select"
+                            @bind-Value="@UpdateTicketRequest.AssignedToId"
+                            id="assignedTo">
+                            @foreach (var technician in Technicians)
+                            {
+                                <option value="@technician.Id">@technician.FirstName @technician.LastName</option>
+                            }
+                        </InputSelect>
+                    </div>
+                    <div class="input-group col">
+                        <span class="input-group-text">Billable Hours:</span>
+                        <InputNumber
+                            class="form-control"
+                            @bind-Value="@UpdateTicketRequest.BillableHours"
+                            id="hours"/>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="input-group col">
+                        <span class="input-group-text">Created:</span>
+                        <span class="form-control">@Ticket.Created</span>
+                    </div>
+                    <div class="input-group col">
+                        <span class="input-group-text">Created By:</span>
+                        <span class="form-control">@Ticket.CreatorName</span>
+                    </div>
+                    <div class="input-group col">
+                        <span class="input-group-text">Modified:</span>
+                        <span class="form-control">@Ticket.Modified</span>
+                    </div>
+                    <div class="input-group col">
+                        <span class="input-group-text">Modified By:</span>
+                        <span class="form-control">@Ticket.ModifierName</span>
+                    </div>
+                </div>
+                <div class="form-floating mb-3">
+                    <InputText
+                        class="form-control"
+                        @bind-Value="@UpdateTicketRequest.Title"
+                        id="title"
+                        placeholder="Title"/>
+                    <label class="form-label" for="title">Title</label>
+                </div>
+                <div class="form-floating mb-3">
+                    <InputTextArea
+                        class="form-control"
+                        @bind-Value="@UpdateTicketRequest.Description"
+                        id="description"
+                        style="height: 40em;"/>
+                    <label class="form-label" for="description">Description</label>
+                </div>
+                <button class="btn btn-primary" type="submit" disabled="@IsBusy">Update</button>
+                <button class="btn btn-secondary" type="button" @onclick="NavigateToTicketList">Back</button>
+            </EditForm>
         </div>
     </div>
+}
 
-    <CreateTicketUpdateForm 
-        TicketId="TicketId"
-        InitialStatus="Ticket.Status"/>
-
-    @foreach (var update in Ticket.Updates)
-    {
-        <TicketUpdate TicketUpdateDto="update"/>
-    }
+@if (ErrorMessage is not null)
+{
+    <br/>
+    <div class="alert alert-danger">@ErrorMessage</div>
 }
 
 @code {
     [Parameter] public int TicketId { get; set; }
     private TicketDto? Ticket { get; set; }
+    private CustomerDto[] Customers { get; set; } = [];
+    private List<UserDto> Technicians { get; set; } = [];
+    private Dictionary<string, TicketStatus> TicketStatusMap { get; set; } = new();
+    private UpdateTicketDto UpdateTicketRequest { get; set; } = new();
+    private bool IsBusy { get; set; }
+    private string? ErrorMessage { get; set; }
 
     protected override async Task OnParametersSetAsync()
     {
-        Ticket = await TicketService.GetTicketByIdAsync(TicketId);
-    }
-}
+        IsBusy = true;
+        try
+        {
+            Ticket = await TicketService.GetTicketByIdAsync(TicketId);
 
+            if (Ticket is null)
+            {
+                throw new Exception($"Ticket id: {TicketId} not found");
+            }
+
+            UpdateTicketRequest = new UpdateTicketDto
+            {
+                Id = Ticket.Id,
+                Title = Ticket.Title,
+                Description = Ticket.Description,
+                CustomerId = Ticket.CustomerId,
+                AssignedToId = Ticket.AssignedToId,
+                Status = Ticket.Status,
+                BillableHours = Ticket.BillableHours
+            };
+
+            foreach (var statusName in Enum.GetNames<TicketStatus>())
+            {
+                TicketStatusMap.Add(statusName, Enum.Parse<TicketStatus>(statusName));
+            }
+
+            Customers = await TicketService.GetCustomersAsync();
+            Technicians = await TicketService.GetTechniciansAsync();
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    private async Task HandleValidSubmitAsync()
+    {
+        if (IsBusy || Ticket is null)
+        {
+            ErrorMessage = null;
+            return;
+        }
+
+        IsBusy = true;
+        try
+        {
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var loggedInUser = authState.User;
+            UpdateTicketRequest.Modifier = loggedInUser.Identity?.Name;
+            await TicketService.UpdateTicketAsync(UpdateTicketRequest);
+
+            NavigateToTicketList();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            ErrorMessage = "The ticket was modified by another user. Please reload this page.";
+        }
+        catch (Exception e)
+        {
+            ErrorMessage = $"Error while adding ticket: {e.Message}";
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    private void NavigateToTicketList()
+    {
+        NavigationManager.NavigateTo($"/tickets/list/{TicketListStateContainer.TicketListPage}");
+    }
+
+}

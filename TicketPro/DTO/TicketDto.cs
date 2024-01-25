@@ -13,9 +13,11 @@ public class TicketDto
     public string? ModifierName { get; set; }
     public string? AssignedToId { get; set; }
     public string? AssignedToName { get; set; }
+    public int CustomerId { get; set; }
+    public string? CustomerName { get; set; }
     public DateTime Created { get; set; }
     public DateTime Modified { get; set; }
     public DateTime? Closed { get; set; }
     public TicketStatus Status { get; set; }
-    public List<TicketUpdateDto> Updates { get; set; } = [];
+    public int BillableHours { get; set; }
 }

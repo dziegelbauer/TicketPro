@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using TicketPro.Conversions;
 using TicketPro.Data;
@@ -6,19 +7,34 @@ using TicketPro.DTO;
 
 namespace TicketPro.Services;
 
-public class TicketService(IDbContextFactory<ApplicationDbContext> contextFactory) : ITicketService
+public class TicketService(
+    IDbContextFactory<ApplicationDbContext> contextFactory, 
+    UserManager<ApplicationUser> userManager) 
+    : ITicketService
 {
     public async Task<TicketDto> CreateTicketAsync(CreateTicketDto request)
     {
-        var now = DateTime.Now;
+        var now = DateTime.UtcNow;
+
+        if (request.Creator is null)
+        {
+            throw new Exception("Attempt to create ticket without a user id");
+        }
+        
+        var creator = await userManager.FindByNameAsync(request.Creator);
+
+        if (creator is null)
+        {
+            throw new Exception("Attempt to create ticket without a valid user id");
+        }
         
         var newTicket = new Ticket
         {
             Id = 0,
             Title = request.Title,
             Description = request.Description,
-            CreatorId = request.CreatorId,
-            ModifierId = request.ModifierId,
+            CreatorId = creator.Id,
+            ModifierId = creator.Id,
             CustomerId = request.CustomerId,
             Status = request.Status,
             Created = now,
@@ -32,43 +48,6 @@ public class TicketService(IDbContextFactory<ApplicationDbContext> contextFactor
         await dbContext.SaveChangesAsync();
 
         return newTicket.ToDto();
-    }
-
-    public async Task<TicketUpdateDto> UpdateTicketAsync(CreateTicketUpdateDto request)
-    {
-        var now = DateTime.Now;
-
-        var newUpdate = new TicketUpdate
-        {
-            Id = 0,
-            Note = request.Note,
-            CreatorId = request.CreatorId,
-            Created = now,
-            Modified = now,
-            ModifierId = request.CreatorId,
-            HoursWorked = request.HoursWorked,
-            IsResolution = request.IsResolution,
-            TicketId = request.TicketId
-        };
-
-        var dbContext = await contextFactory.CreateDbContextAsync();
-
-        var ticketToUpdate = await dbContext.Tickets.FindAsync(request.TicketId);
-
-        if (ticketToUpdate is null)
-        {
-            throw new Exception($"Ticket with id: {request.TicketId} not found");
-        }
-        
-        if (request.ShouldUpdateStatus)
-        {
-            ticketToUpdate.Status = request.NewStatus;
-        }
-
-        await dbContext.AddAsync(newUpdate);
-        await dbContext.SaveChangesAsync();
-
-        return newUpdate.ToDto();
     }
 
     public async Task<CustomerDto[]> GetCustomersAsync()
@@ -116,8 +95,128 @@ public class TicketService(IDbContextFactory<ApplicationDbContext> contextFactor
     {
         var dbContext = await contextFactory.CreateDbContextAsync();
 
-        var ticket = await dbContext.Tickets.FindAsync(ticketId);
+        var ticket = await dbContext.Tickets
+            .Include(t => t.Creator)
+            .Include(t => t.Modifier)
+            .Include(t => t.AssignedTo)
+            .Include(t => t.Customer)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(t => t.Id == ticketId);
+        
+        if (ticket is null)
+        {
+            throw new Exception($"Ticket with id: {ticketId} not found");
+        }
 
-        return ticket?.ToDto();
+        return ticket.ToDto();
+    }
+
+    public async Task<List<UserDto>> GetTechniciansAsync()
+    {
+        var technicians = await userManager.GetUsersInRoleAsync("TECHNICIAN");
+
+        return technicians.Select(u => u.ToDto()).ToList();
+    }
+
+    public async Task UpdateTicketAsync(UpdateTicketDto updateTicketRequest)
+    {
+        var dbContext = await contextFactory.CreateDbContextAsync();
+
+        var ticket = await dbContext.Tickets.FindAsync(updateTicketRequest.Id);
+
+        if (ticket is null)
+        {
+            throw new Exception($"Ticket with id: {updateTicketRequest.Id} not found");
+        }
+
+        ticket.UpdateFromDto(updateTicketRequest);
+        
+        await dbContext.SaveChangesAsync();
+    }
+
+    public async Task DeleteTicketAsync(int ticketId)
+    {
+        var dbContext = await contextFactory.CreateDbContextAsync();
+
+        var ticket = await dbContext.Tickets.FindAsync(ticketId);
+        
+        if (ticket is null)
+        {
+            throw new Exception($"Ticket with id: {ticketId} not found");
+        }
+
+        dbContext.Tickets.Remove(ticket);
+        await dbContext.SaveChangesAsync();
+    }
+
+    public async Task<List<TechnicianRevenueDto>> GetTechnicianRevenueDataAsync()
+    {
+        var dbContext = await contextFactory.CreateDbContextAsync();
+        var technicians = await userManager.GetUsersInRoleAsync("TECHNICIAN");
+
+        var dataList = new List<TechnicianRevenueDto>();
+
+        foreach (var technician in technicians)
+        {
+            var tickets = await dbContext.Tickets
+                .AsNoTracking()
+                .Where(t => t.Status == TicketStatus.Closed)
+                .Where(t => t.AssignedToId == technician.Id)
+                .ToListAsync();
+
+            var data = new TechnicianRevenueDto
+            {
+                TechnicianId = technician.Id,
+                TechnicianName = $"{technician.FirstName} {technician.LastName}",
+                TotalHours = tickets.Select(t => t.BillableHours).Sum(),
+                TotalTickets = tickets.Count
+            };
+
+            data.TotalRevenue = data.TotalHours * technician.ChargeableRate;
+            
+            dataList.Add(data);
+        }
+
+        return dataList;
+    }
+
+    public async Task<List<CustomerRevenueDto>> GetCustomerRevenueDataAsync()
+    {
+        var dbContext = await contextFactory.CreateDbContextAsync();
+        var customers = await dbContext.Customers
+            .AsNoTracking()
+            .ToListAsync();
+
+        var dataList = new List<CustomerRevenueDto>();
+
+        foreach (var customer in customers)
+        {
+            var tickets = await dbContext.Tickets
+                .AsNoTracking()
+                .Include(t => t.AssignedTo)
+                .Where(t => t.Status == TicketStatus.Closed)
+                .Where(t => t.CustomerId == customer.Id)
+                .Where(t => t.AssignedToId != null)
+                .ToListAsync();
+
+            var data = new CustomerRevenueDto
+            {
+                CustomerId = customer.Id,
+                CustomerName = customer.Name!,
+                TotalHours = tickets.Select(t => t.BillableHours).Sum(),
+                TotalTickets = tickets.Count
+            };
+
+            data.TotalRevenue = 0;
+
+            foreach (var ticket in tickets)
+            {
+                data.TotalRevenue += ticket.BillableHours * ticket.AssignedTo!.ChargeableRate;
+            }
+            
+            dataList.Add(data);
+        }
+
+        return dataList;
     }
 }

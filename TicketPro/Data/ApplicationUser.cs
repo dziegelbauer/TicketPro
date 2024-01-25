@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Identity;
 
 namespace TicketPro.Data;
@@ -6,4 +7,8 @@ namespace TicketPro.Data;
 public class ApplicationUser : IdentityUser
 {
     public decimal ChargeableRate { get; set; }
+    [StringLength(50)]
+    public string? FirstName { get; set; }
+    [StringLength(50)]
+    public string? LastName { get; set; }
 }

@@ -1,7 +1,12 @@
 @page "/tickets/list/{CurrentPage:int?}"
 @using TicketPro.Services
+@using TicketPro.Components.State
+@using Microsoft.EntityFrameworkCore
 @inject NavigationManager NavigationManager
 @inject ITicketService TicketService
+@inject TicketListStateContainer TicketListStateContainer
+@inject IJSRuntime JS
+@attribute [Authorize]
 
 <PageTitle>Manage Tickets</PageTitle>
 
@@ -16,28 +21,45 @@ else
     <div class="d-flex container-fluid justify-content-between align-items-center">
         <ul class="pagination mt-3">
             <li class="page-item @(CurrentPage == 1 ? "disabled" : "")">
-                <a class="page-link" href="/employees/list/@(CurrentPage - 1)">Previous</a>
+                <a class="page-link" href="/tickets/list/@(CurrentPage - 1)">Previous</a>
             </li>
             @for (var i = 1; i <= TotalPages; i++)
             {
                 <li class="page-item @(CurrentPage == i ? "active" : "")">
-                    <a class="page-link" href="/employees/list/@i">@i</a>
+                    <a class="page-link" href="/tickets/list/@i">@i</a>
                 </li>
             }
             <li class="page-item @(CurrentPage == TotalPages ? "disabled" : "")">
-                <a class="page-link" href="/employees/list/@(CurrentPage + 1)">Next</a>
+                <a class="page-link" href="/tickets/list/@(CurrentPage + 1)">Next</a>
             </li>
         </ul>
         <a class="btn btn-primary" href="/tickets/add">Create Ticket</a>
     </div>
-    
+    <div class="row mb-3">
+        <div class="input-group col">
+            <InputText
+                type="text"
+                @bind-Value="SearchString"
+                class="form-control"
+                placeholder="Search..."
+                aria-label="Search"
+                aria-describedby="button-search"/>
+            <button class="btn btn-outline-secondary" type="button" id="button-search">
+                <span class="bi bi-search"></span>Search
+            </button>
+        </div>
+    </div>
+
     <table class="table table-striped">
         <thead>
         <tr>
             <th>Id</th>
             <th>Title</th>
+            <th>Customer</th>
             <th>Status</th>
             <th>Assigned To</th>
+            <th>Created</th>
+            <th>Modified</th>
             <th></th>
         </tr>
         </thead>
@@ -47,12 +69,18 @@ else
             <tr>
                 <td>@ticket.Id</td>
                 <td>@ticket.Title</td>
+                <td>@ticket.CustomerName</td>
                 <td>@ticket.Status.ToString()</td>
                 <td>@ticket.AssignedToName</td>
+                <td>@ticket.Created</td>
+                <td>@ticket.Modified</td>
                 <td class="btn-group-sm">
                     <a class="btn btn-outline-primary" href="/tickets/@ticket.Id">
                         Update
                     </a>
+                    <button class="btn btn-outline-danger" @onclick="() => HandleDelete(ticket.Id)">
+                        Delete
+                    </button>
                 </td>
             </tr>
         }
@@ -61,12 +89,12 @@ else
 }
 
 @code {
-    [Parameter]
-    public int? CurrentPage { get; set; }
+    [Parameter] public int? CurrentPage { get; set; }
     private List<TicketDto>? Tickets { get; set; }
     private int TotalPages { get; set; }
     private const int ItemsPerPage = 10;
-    
+    private string SearchString { get; set; }= string.Empty;
+
     protected override async Task OnParametersSetAsync()
     {
         await LoadData();
@@ -79,18 +107,42 @@ else
             NavigationManager.NavigateTo("/tickets/list/1");
             return;
         }
-        
-        var employeeCount = await TicketService.GetTicketCountAsync();
-        TotalPages = employeeCount == 0
+
+        var ticketCount = await TicketService.GetTicketCountAsync();
+        TotalPages = ticketCount == 0
             ? 1
-            : (int)Math.Ceiling((double)employeeCount / ItemsPerPage);
+            : (int)Math.Ceiling((double)ticketCount / ItemsPerPage);
 
         if (CurrentPage > TotalPages)
         {
-            NavigationManager.NavigateTo($"/employees/list/{TotalPages}");
+            NavigationManager.NavigateTo($"/tickets/list/{TotalPages}");
             return;
         }
 
-        Tickets = await TicketService.GetTicketsAsync(itemsPerPage: ItemsPerPage, currentPage: CurrentPage ?? 1);
+        TicketListStateContainer.TicketListPage = CurrentPage.Value;
+        Tickets = await TicketService.GetTicketsAsync(itemsPerPage: ItemsPerPage, currentPage: CurrentPage.Value);
     }
+
+    private async Task HandleDelete(int ticketId)
+    {
+        var isOk = await JS.InvokeAsync<bool>("confirm",
+            $"Delete ticket id: {ticketId}? This cannot be undone.");
+        if (isOk)
+        {
+            try
+            {
+                await TicketService.DeleteTicketAsync(ticketId);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                // Prevent this exception from reaching the user if the user is gone...
+                // that was the point anyway
+            }
+            finally
+            {
+                await LoadData();
+            }
+        }
+    }
+
 }
