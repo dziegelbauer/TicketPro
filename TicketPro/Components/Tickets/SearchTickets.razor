@@ -1,0 +1,205 @@
+@page "/tickets/search"
+@using Syncfusion.Blazor.Calendars
+@using TicketPro.Services
+@using Microsoft.EntityFrameworkCore
+@inject ITicketService TicketService
+@inject IJSRuntime JS
+@rendermode InteractiveServer
+@attribute [Authorize]
+
+<PageTitle>Search Tickets</PageTitle>
+
+<h3>Search Tickets</h3>
+
+@if (Customers is null || Technicians is null)
+{
+    if (IsBusy)
+    {
+        <PageTitle>Loading...</PageTitle>
+
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-danger">@ErrorMessage</div>
+    }
+}
+else
+{
+    <EditForm
+        Model="SearchFilters"
+        FormName="SearchTickets">
+        <div class="row mb-3">
+            <div class="input-group col">
+                <span class="input-group-text">Status</span>
+                <InputSelect
+                    class="form-select"
+                    @bind-Value="@SearchFilters.TicketStatus"
+                    id="status">
+                    @foreach (var statusName in TicketStatusFilterMap.Keys)
+                    {
+                        <option value="@TicketStatusFilterMap[statusName]">@statusName</option>
+                    }
+                </InputSelect>
+            </div>
+            <div class="input-group col">
+                <span class="input-group-text">Customer:</span>
+                <InputSelect
+                    class="form-select"
+                    @bind-Value="@SearchFilters.CustomerId"
+                    id="customer">
+                    <option value="-1">any</option>
+                    @foreach (var customer in Customers)
+                    {
+                        <option value="@customer.Id">@customer.Name</option>
+                    }
+                </InputSelect>
+            </div>
+            <div class="input-group col">
+                <span class="input-group-text">Assigned to:</span>
+                <InputSelect
+                    class="form-select"
+                    @bind-Value="@SearchFilters.AssignedTo"
+                    id="assignedTo">
+                    <option value="any">any</option>
+                    @foreach (var technician in Technicians)
+                    {
+                        <option value="@technician.Id">@technician.FirstName @technician.LastName</option>
+                    }
+                </InputSelect>
+            </div>
+        </div>
+        <div class="row mb-3">
+            <div class="col">
+                <SfDatePicker Placeholder="Created after..." TValue="DateTime?" @bind-Value="@SearchFilters.CreatedAfter"/>
+            </div>
+            <div class="col">
+                <SfDatePicker Placeholder="Created before..." TValue="DateTime?" @bind-Value="@SearchFilters.CreatedBefore"/>
+            </div>
+            <div class="input-group col">
+                <span class="input-group-text">Created By:</span>
+                <InputSelect
+                    class="form-select"
+                    @bind-Value="@SearchFilters.CreatedBy"
+                    id="assignedTo">
+                    <option value="any">any</option>
+                    @foreach (var technician in Technicians)
+                    {
+                        <option value="@technician.Id">@technician.FirstName @technician.LastName</option>
+                    }
+                </InputSelect>
+            </div>
+        </div>
+        <div class="input-group mb-3">
+            <span class="input-group-text" id="searchStringLabel">Search Text:</span>
+            <InputText
+                class="form-control"
+                @bind-Value="@SearchFilters.SearchString"
+                placeholder="Search text"
+                aria-label="Search Text"
+                aria-describedby="searchStringLabel"/>
+            <button class="btn btn-primary" type="button" @onclick="RunSearch">Search</button>
+        </div>
+    </EditForm>
+}
+
+@if (SearchResults is not null)
+{
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th>Id</th>
+            <th>Title</th>
+            <th>Customer</th>
+            <th>Status</th>
+            <th>Assigned To</th>
+            <th>Created</th>
+            <th>Modified</th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var ticket in SearchResults)
+        {
+            <tr>
+                <td>@ticket.Id</td>
+                <td>@ticket.Title</td>
+                <td>@ticket.CustomerName</td>
+                <td>@ticket.Status.ToString()</td>
+                <td>@ticket.AssignedToName</td>
+                <td>@ticket.Created</td>
+                <td>@ticket.Modified</td>
+                <td class="btn-group-sm">
+                    <a class="btn btn-outline-primary" href="/tickets/@ticket.Id">
+                        Update
+                    </a>
+                    <button class="btn btn-outline-danger" @onclick="() => HandleDelete(ticket.Id)">
+                        Delete
+                    </button>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+
+@code {
+    private bool IsBusy { get; set; }
+    private List<TicketDto>? SearchResults { get; set; }
+    private CustomerDto[]? Customers { get; set; }
+    private List<UserDto>? Technicians { get; set; }
+    private Dictionary<string, TicketStatusFilter> TicketStatusFilterMap { get; set; } = new();
+    private string? ErrorMessage { get; set; }
+    private SearchFilterDto SearchFilters { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        IsBusy = true;
+        try
+        {
+            Customers = await TicketService.GetCustomersAsync();
+            Technicians = await TicketService.GetTechniciansAsync();
+            foreach (var statusName in Enum.GetNames<TicketStatusFilter>())
+            {
+                TicketStatusFilterMap.Add(statusName, Enum.Parse<TicketStatusFilter>(statusName));
+            }
+        }
+        catch (Exception e)
+        {
+            ErrorMessage = e.Message;
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    private async Task RunSearch()
+    {
+        SearchResults = await TicketService.GetTicketsAsync(SearchFilters);
+    }
+    
+    private async Task HandleDelete(int ticketId)
+    {
+        var isOk = await JS.InvokeAsync<bool>("confirm",
+            $"Delete ticket id: {ticketId}? This cannot be undone.");
+        if (isOk)
+        {
+            try
+            {
+                await TicketService.DeleteTicketAsync(ticketId);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                // Prevent this exception from reaching the user if the user is gone...
+                // that was the point anyway
+            }
+            finally
+            {
+                await RunSearch();
+            }
+        }
+    }
+}

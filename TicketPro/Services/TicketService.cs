@@ -85,6 +85,67 @@ public class TicketService(
             .ToListAsync();
     }
 
+    public async Task<List<TicketDto>> GetTicketsAsync(SearchFilterDto searchFilter)
+    {
+        var dbContext = await contextFactory.CreateDbContextAsync();
+
+        var query = dbContext.Tickets
+            .Include(t => t.Creator)
+            .Include(t => t.Modifier)
+            .Include(t => t.AssignedTo)
+            .Include(t => t.Customer)
+            .AsNoTracking();
+
+        if (searchFilter.TicketStatus != TicketStatusFilter.Any)
+        {
+            var statusFilter = searchFilter.TicketStatus switch
+            {
+                TicketStatusFilter.Open => TicketStatus.Open,
+                TicketStatusFilter.Assigned => TicketStatus.Assigned,
+                TicketStatusFilter.Deferred => TicketStatus.Deferred,
+                TicketStatusFilter.Closed => TicketStatus.Closed,
+                TicketStatusFilter.Cancelled => TicketStatus.Cancelled,
+                _ => throw new Exception("Invalid TicketStatusFilter")
+            };
+
+            query = query.Where(t => t.Status == statusFilter);
+        }
+
+        if (searchFilter.AssignedTo != "any")
+        {
+            query = query.Where(t => t.AssignedToId == searchFilter.AssignedTo);
+        }
+
+        if (searchFilter.CreatedBy != "any")
+        {
+            query = query.Where(t => t.CreatorId == searchFilter.CreatedBy);
+        }
+
+        if (searchFilter.CustomerId != -1)
+        {
+            query = query.Where(t => t.CustomerId == searchFilter.CustomerId);
+        }
+
+        if (searchFilter.CreatedBefore is not null)
+        {
+            query = query.Where(t => t.Created < searchFilter.CreatedBefore);
+        }
+
+        if (searchFilter.CreatedAfter is not null)
+        {
+            query = query.Where(t => t.Created > searchFilter.CreatedAfter);
+        }
+
+        if (!string.IsNullOrWhiteSpace(searchFilter.SearchString))
+        {
+            query = query.Where(t => 
+                (t.Description != null && t.Description.Contains(searchFilter.SearchString))
+                 || (t.Title != null && t.Title.Contains(searchFilter.SearchString)));
+        }
+
+        return await query.Select(t => t.ToDto()).ToListAsync();
+    }
+
     public async Task<int> GetTicketCountAsync()
     {
         var dbContext = await contextFactory.CreateDbContextAsync();
@@ -129,6 +190,15 @@ public class TicketService(
         {
             throw new Exception($"Ticket with id: {updateTicketRequest.Id} not found");
         }
+        
+        var modifier = await userManager.FindByNameAsync(updateTicketRequest.Modifier!);
+
+        if (modifier is null)
+        {
+            throw new Exception("Attempt to update ticket without a valid user id");
+        }
+        
+        updateTicketRequest.Modifier = modifier.Id;
 
         ticket.UpdateFromDto(updateTicketRequest);
         
