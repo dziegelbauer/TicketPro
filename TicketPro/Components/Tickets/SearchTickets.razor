@@ -2,8 +2,10 @@
 @using Syncfusion.Blazor.Calendars
 @using TicketPro.Services
 @using Microsoft.EntityFrameworkCore
+@using TicketPro.Components.State
 @inject ITicketService TicketService
 @inject IJSRuntime JS
+@inject TicketListStateContainer TicketListStateContainer
 @rendermode InteractiveServer
 @attribute [Authorize]
 
@@ -29,14 +31,14 @@
 else
 {
     <EditForm
-        Model="SearchFilters"
+        Model="TicketListStateContainer.SearchFilters"
         FormName="SearchTickets">
         <div class="row mb-3">
             <div class="input-group col">
                 <span class="input-group-text">Status</span>
                 <InputSelect
                     class="form-select"
-                    @bind-Value="@SearchFilters.TicketStatus"
+                    @bind-Value="@TicketListStateContainer.SearchFilters.TicketStatus"
                     id="status">
                     @foreach (var statusName in TicketStatusFilterMap.Keys)
                     {
@@ -48,7 +50,7 @@ else
                 <span class="input-group-text">Customer:</span>
                 <InputSelect
                     class="form-select"
-                    @bind-Value="@SearchFilters.CustomerId"
+                    @bind-Value="@TicketListStateContainer.SearchFilters.CustomerId"
                     id="customer">
                     <option value="-1">any</option>
                     @foreach (var customer in Customers)
@@ -61,7 +63,7 @@ else
                 <span class="input-group-text">Assigned to:</span>
                 <InputSelect
                     class="form-select"
-                    @bind-Value="@SearchFilters.AssignedTo"
+                    @bind-Value="@TicketListStateContainer.SearchFilters.AssignedTo"
                     id="assignedTo">
                     <option value="any">any</option>
                     @foreach (var technician in Technicians)
@@ -73,16 +75,16 @@ else
         </div>
         <div class="row mb-3">
             <div class="col">
-                <SfDatePicker Placeholder="Created after..." TValue="DateTime?" @bind-Value="@SearchFilters.CreatedAfter"/>
+                <SfDatePicker Placeholder="Created after..." TValue="DateTime?" @bind-Value="@TicketListStateContainer.SearchFilters.CreatedAfter"/>
             </div>
             <div class="col">
-                <SfDatePicker Placeholder="Created before..." TValue="DateTime?" @bind-Value="@SearchFilters.CreatedBefore"/>
+                <SfDatePicker Placeholder="Created before..." TValue="DateTime?" @bind-Value="@TicketListStateContainer.SearchFilters.CreatedBefore"/>
             </div>
             <div class="input-group col">
                 <span class="input-group-text">Created By:</span>
                 <InputSelect
                     class="form-select"
-                    @bind-Value="@SearchFilters.CreatedBy"
+                    @bind-Value="@TicketListStateContainer.SearchFilters.CreatedBy"
                     id="assignedTo">
                     <option value="any">any</option>
                     @foreach (var technician in Technicians)
@@ -96,7 +98,7 @@ else
             <span class="input-group-text" id="searchStringLabel">Search Text:</span>
             <InputText
                 class="form-control"
-                @bind-Value="@SearchFilters.SearchString"
+                @bind-Value="@TicketListStateContainer.SearchFilters.SearchString"
                 placeholder="Search text"
                 aria-label="Search Text"
                 aria-describedby="searchStringLabel"/>
@@ -152,7 +154,6 @@ else
     private List<UserDto>? Technicians { get; set; }
     private Dictionary<string, TicketStatusFilter> TicketStatusFilterMap { get; set; } = new();
     private string? ErrorMessage { get; set; }
-    private SearchFilterDto SearchFilters { get; set; } = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -178,7 +179,7 @@ else
 
     private async Task RunSearch()
     {
-        SearchResults = await TicketService.GetTicketsAsync(SearchFilters);
+        SearchResults = await TicketService.GetTicketsAsync(TicketListStateContainer.SearchFilters);
     }
     
     private async Task HandleDelete(int ticketId)
