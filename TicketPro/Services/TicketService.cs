@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Syncfusion.Blazor.Data;
 using TicketPro.Conversions;
 using TicketPro.Data;
 using TicketPro.Data.Models;
@@ -218,5 +219,19 @@ public class TicketService(
         }
 
         return dataList;
+    }
+
+    public async Task<List<TicketStatusDataDto>> GetTicketStatusDataAsync()
+    {
+        var dbContext = await contextFactory.CreateDbContextAsync();
+
+        return await dbContext.Tickets
+            .AsNoTracking()
+            .Select(t => new TicketStatusDataDto
+            {
+                Id = t.Id,
+                Status = t.Status
+            })
+            .ToListAsync();
     }
 }

@@ -15,4 +15,5 @@ public interface ITicketService
     Task DeleteTicketAsync(int ticketId);
     Task<List<TechnicianRevenueDto>> GetTechnicianRevenueDataAsync();
     Task<List<CustomerRevenueDto>> GetCustomerRevenueDataAsync();
+    Task<List<TicketStatusDataDto>> GetTicketStatusDataAsync();
 }
