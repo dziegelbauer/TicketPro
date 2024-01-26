@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Syncfusion.Blazor.Data;
 using TicketPro.Conversions;
 using TicketPro.Data;
 using TicketPro.Data.Models;
 using TicketPro.DTO;
+using TicketPro.Exceptions;
 
 namespace TicketPro.Services;
 
@@ -19,14 +19,14 @@ public class TicketService(
 
         if (request.Creator is null)
         {
-            throw new Exception("Attempt to create ticket without a user id");
+            throw new NullUserException("Attempt to create ticket without a user id");
         }
         
         var creator = await userManager.FindByNameAsync(request.Creator);
 
         if (creator is null)
         {
-            throw new Exception("Attempt to create ticket without a valid user id");
+            throw new UserNotFoundException("Attempt to create ticket without a valid user id");
         }
         
         var newTicket = new Ticket
@@ -167,7 +167,7 @@ public class TicketService(
         
         if (ticket is null)
         {
-            throw new Exception($"Ticket with id: {ticketId} not found");
+            throw new TicketNotFoundException($"Ticket with id: {ticketId} not found");
         }
 
         return ticket.ToDto();
@@ -188,14 +188,14 @@ public class TicketService(
 
         if (ticket is null)
         {
-            throw new Exception($"Ticket with id: {updateTicketRequest.Id} not found");
+            throw new TicketNotFoundException($"Ticket with id: {updateTicketRequest.Id} not found");
         }
         
         var modifier = await userManager.FindByNameAsync(updateTicketRequest.Modifier!);
 
         if (modifier is null)
         {
-            throw new Exception("Attempt to update ticket without a valid user id");
+            throw new UserNotFoundException("Attempt to update ticket without a valid user id");
         }
         
         updateTicketRequest.Modifier = modifier.Id;
@@ -213,7 +213,7 @@ public class TicketService(
         
         if (ticket is null)
         {
-            throw new Exception($"Ticket with id: {ticketId} not found");
+            throw new TicketNotFoundException($"Ticket with id: {ticketId} not found");
         }
 
         dbContext.Tickets.Remove(ticket);
@@ -275,10 +275,9 @@ public class TicketService(
                 CustomerId = customer.Id,
                 CustomerName = customer.Name!,
                 TotalHours = tickets.Select(t => t.BillableHours).Sum(),
-                TotalTickets = tickets.Count
+                TotalTickets = tickets.Count,
+                TotalRevenue = 0
             };
-
-            data.TotalRevenue = 0;
 
             foreach (var ticket in tickets)
             {
