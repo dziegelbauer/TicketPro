@@ -1,0 +1,7 @@
+@startuml
+skinparam nodesep 100
+!include ./Data/ApplicationUser.puml
+!include ./Data/Models/Ticket.puml
+!include ./Data/Models/Customer.puml
+!include ./Data/Models/TicketStatus.puml
+@enduml
