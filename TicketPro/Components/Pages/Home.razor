@@ -20,9 +20,12 @@ else
     <div class="col-4">
         <SfAccumulationChart Title="Ticket Statistics">
             <AccumulationChartSeriesCollection>
-                <AccumulationChartSeries DataSource="@StatusData" XName="Name" YName="Count" Name="Status" InnerRadius="40%"/>
+                <AccumulationChartSeries DataSource="@StatusData" XName="Name" YName="Count" Name="Status" InnerRadius="40%">
+                    <AccumulationDataLabelSettings Visible="true" Name="Text" Position="AccumulationLabelPosition.Outside"></AccumulationDataLabelSettings>
+                </AccumulationChartSeries>
             </AccumulationChartSeriesCollection>
             <AccumulationChartLegendSettings Visible="true"/>
+            <AccumulationChartTooltipSettings Enable="true"/>
         </SfAccumulationChart>
     </div>
 }
