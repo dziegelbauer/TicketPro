@@ -28,6 +28,28 @@ public class TicketService(
         {
             throw new UserNotFoundException("Attempt to create ticket without a valid user id");
         }
+
+        if (request.AssignedToId is null)
+        {
+            if(request.Status == TicketStatus.Assigned)
+            {
+                request.Status = TicketStatus.Open;
+            }
+        }
+        else
+        {
+            var assignee = await userManager.FindByIdAsync(request.AssignedToId);
+
+            if (assignee is null)
+            {
+                throw new UserNotFoundException("Attempt to assign ticket to an invalid user id");
+            }
+
+            if (request.Status == TicketStatus.Open)
+            {
+                request.Status = TicketStatus.Assigned;
+            }
+        }
         
         var newTicket = new Ticket
         {
@@ -199,6 +221,28 @@ public class TicketService(
         }
         
         updateTicketRequest.Modifier = modifier.Id;
+        
+        if (updateTicketRequest.AssignedToId is null)
+        {
+            if(updateTicketRequest.Status == TicketStatus.Assigned)
+            {
+                updateTicketRequest.Status = TicketStatus.Open;
+            }
+        }
+        else
+        {
+            var assignee = await userManager.FindByIdAsync(updateTicketRequest.AssignedToId);
+
+            if (assignee is null)
+            {
+                throw new UserNotFoundException("Attempt to assign ticket to an invalid user id");
+            }
+
+            if (updateTicketRequest.Status == TicketStatus.Open)
+            {
+                updateTicketRequest.Status = TicketStatus.Assigned;
+            }
+        }
 
         ticket.UpdateFromDto(updateTicketRequest);
         

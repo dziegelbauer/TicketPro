@@ -37,6 +37,12 @@ public class TicketServiceTests
                 Id = "567"
             });
 
+        _userManager.FindByIdAsync(Arg.Is("567"))
+            .Returns(new ApplicationUser
+            {
+                Id = "567"
+            });
+
         _userManager.GetUsersInRoleAsync(Arg.Is("TECHNICIAN"))
             .Returns(new []
             {
