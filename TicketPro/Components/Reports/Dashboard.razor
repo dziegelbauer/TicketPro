@@ -8,7 +8,7 @@
 <PageTitle>Report Dashboard</PageTitle>
 
 <h1>Revenue and Performance Metrics</h1>
-<h4>Current as of @DateTime.Now.ToString("R")</h4>
+<h4>Current as of @DateTime.Now.ToString("F")</h4>
 
 @if (TechnicianRevenueData is not null)
 {
@@ -97,7 +97,7 @@ else
 @code {
     private List<TechnicianRevenueDto>? TechnicianRevenueData { get; set; }
     private List<CustomerRevenueDto>? CustomerRevenueData { get; set; }
-    private string[] BarColors = { "#0d6efd" };
+    private string[] BarColors { get; set; } = ["#0d6efd"];
 
     protected override async Task OnInitializedAsync()
     {
