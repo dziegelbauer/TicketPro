@@ -2,7 +2,6 @@
 @using TicketPro.Services
 @using TicketPro.Components.State
 @using Microsoft.EntityFrameworkCore
-@using TicketPro.Data.Models
 @inject NavigationManager NavigationManager
 @inject ITicketService TicketService
 @inject TicketListStateContainer TicketListStateContainer
@@ -89,7 +88,9 @@ else
 
     private async Task LoadData()
     {
-        if (CurrentPage is null or < 1)
+        CurrentPage ??= 1;
+        
+        if (CurrentPage < 1)
         {
             NavigationManager.NavigateTo("/tickets/list/1");
             return;
