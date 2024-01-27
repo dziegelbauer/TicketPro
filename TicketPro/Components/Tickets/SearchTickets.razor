@@ -52,7 +52,7 @@ else
                     class="form-select"
                     @bind-Value="@TicketListStateContainer.SearchFilters.CustomerId"
                     id="customer">
-                    <option value="-1">any</option>
+                    <option value="-1">Any</option>
                     @foreach (var customer in Customers)
                     {
                         <option value="@customer.Id">@customer.Name</option>
@@ -65,7 +65,7 @@ else
                     class="form-select"
                     @bind-Value="@TicketListStateContainer.SearchFilters.AssignedTo"
                     id="assignedTo">
-                    <option value="any">any</option>
+                    <option value="any">Any</option>
                     @foreach (var technician in Technicians)
                     {
                         <option value="@technician.Id">@technician.FirstName @technician.LastName</option>
