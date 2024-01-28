@@ -1,0 +1,110 @@
+{
+  "taskDefinitionArn": "arn:aws:ecs:us-east-1:<AWS_Account_Number>:task-definition/TicketPro:5",
+  "containerDefinitions": [
+    {
+      "name": "ticketpro",
+      "image": "<AWS_Account_Number>.dkr.ecr.us-east-1.amazonaws.com/ticketpro:latest",
+      "cpu": 0,
+      "portMappings": [
+        {
+          "name": "8080",
+          "containerPort": 8080,
+          "hostPort": 8080,
+          "protocol": "tcp",
+          "appProtocol": "http"
+        }
+      ],
+      "essential": true,
+      "environment": [
+        {
+          "name": "ASPNETCORE_ENVIRONMENT",
+          "value": "Production"
+        },
+        {
+          "name": "ASPNETCORE_URLS",
+          "value": "http://*:8080"
+        },
+        {
+          "name": "SYNCFUSION_KEY",
+          "value": "<Syncfusion_License_Key>"
+        }
+      ],
+      "environmentFiles": [],
+      "mountPoints": [],
+      "volumesFrom": [],
+      "secrets": [
+        {
+          "name": "CONNECTION_STRING",
+          "valueFrom": "arn:aws:ssm:us-east-1:<AWS_Account_Number>:parameter/ticketpro/connectionString"
+        }
+      ],
+      "ulimits": [],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-create-group": "true",
+          "awslogs-group": "/ecs/TicketPro",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "ecs"
+        },
+        "secretOptions": []
+      }
+    }
+  ],
+  "family": "TicketPro",
+  "taskRoleArn": "arn:aws:iam::<AWS_Account_Number>:role/ECS-TicketPro-Role",
+  "executionRoleArn": "arn:aws:iam::<AWS_Account_Number>:role/ecsTaskExecutionRole",
+  "networkMode": "awsvpc",
+  "revision": 5,
+  "volumes": [],
+  "status": "ACTIVE",
+  "requiresAttributes": [
+    {
+      "name": "com.amazonaws.ecs.capability.logging-driver.awslogs"
+    },
+    {
+      "name": "ecs.capability.execution-role-awslogs"
+    },
+    {
+      "name": "com.amazonaws.ecs.capability.ecr-auth"
+    },
+    {
+      "name": "com.amazonaws.ecs.capability.docker-remote-api.1.19"
+    },
+    {
+      "name": "com.amazonaws.ecs.capability.task-iam-role"
+    },
+    {
+      "name": "ecs.capability.execution-role-ecr-pull"
+    },
+    {
+      "name": "ecs.capability.secrets.ssm.environment-variables"
+    },
+    {
+      "name": "com.amazonaws.ecs.capability.docker-remote-api.1.18"
+    },
+    {
+      "name": "ecs.capability.task-eni"
+    },
+    {
+      "name": "com.amazonaws.ecs.capability.docker-remote-api.1.29"
+    }
+  ],
+  "placementConstraints": [],
+  "compatibilities": [
+    "EC2",
+    "FARGATE"
+  ],
+  "requiresCompatibilities": [
+    "FARGATE"
+  ],
+  "cpu": "1024",
+  "memory": "3072",
+  "runtimePlatform": {
+    "cpuArchitecture": "ARM64",
+    "operatingSystemFamily": "LINUX"
+  },
+  "registeredAt": "2024-01-26T01:47:20.796Z",
+  "registeredBy": "arn:aws:iam::<AWS_Account_Number>:user/<IAM_User_Name>",
+  "tags": []
+}
