@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Configuration;
 using Syncfusion.Blazor;
 using TicketPro.Components;
 using TicketPro.Components.Account;
@@ -29,6 +30,8 @@ builder.Services.AddAuthentication(options =>
 
 var connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING") 
                        ?? throw new InvalidOperationException("Cannot read CONNECTION_STRING");
+
+Console.WriteLine(connectionString);
 
 builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
 {
