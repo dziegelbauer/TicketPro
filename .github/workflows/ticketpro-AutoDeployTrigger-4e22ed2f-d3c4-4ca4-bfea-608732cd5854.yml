@@ -1,0 +1,43 @@
+name: Trigger auto deployment for ticketpro
+
+# When this action will be executed
+on:
+  # Automatically trigger it when detected changes in repo
+  push:
+    branches: 
+      [ public ]
+    paths:
+    - 'TicketPro/**'
+    - '.github/workflows/ticketpro-AutoDeployTrigger-4e22ed2f-d3c4-4ca4-bfea-608732cd5854.yml'
+
+  # Allow manual trigger 
+  workflow_dispatch:
+      
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout to the branch
+        uses: actions/checkout@v2
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.TICKETPRO_AZURE_CREDENTIALS }}
+
+      - name: Build and push container image to registry
+        uses: azure/container-apps-deploy-action@v2
+        with:
+          appSourcePath: ${{ github.workspace }}
+          registryUrl: ticketpro.azurecr.io
+          registryUsername: ${{ secrets.TICKETPRO_REGISTRY_USERNAME }}
+          registryPassword: ${{ secrets.TICKETPRO_REGISTRY_PASSWORD }}
+          containerAppName: ticketpro
+          resourceGroup: TicketPro
+          imageToBuild: ticketpro.azurecr.io/ticketpro:${{ github.sha }}
+          
+            
+
+     
+
